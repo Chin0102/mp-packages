@@ -1,3 +1,5 @@
+import { getEnv, getSystemInfo, initPlatform, platform } from '@chin0102/mp-adapter';
+
 import { bindStore, unbindStores } from './store-bind.js';
 
 const pageRecords = new Map();
@@ -15,53 +17,14 @@ function deferred() {
   return { promise, resolve };
 }
 
-export function getEnv() {
-  let version = 'develop';
-  try {
-    version = wx.getAccountInfoSync?.().miniProgram?.envVersion || version;
-  } catch (e) {}
-
-  return {
-    version,
-    dev: version === 'develop',
-    trial: version === 'trial',
-    prod: version === 'release',
-  };
-}
-
-export function getSystemInfo() {
-  const info = wx.getSystemInfoSync();
-  const { system = '', platform = '', statusBarHeight = 0, screenWidth = 0, screenHeight = 0, pixelRatio = 1 } = info;
-  const safeArea = info.safeArea || {
-    left: 0,
-    right: screenWidth,
-    top: 0,
-    bottom: screenHeight,
-    width: screenWidth,
-    height: screenHeight,
-  };
-  const menuButton = wx.getMenuButtonBoundingClientRect?.() || {};
-  const os = system.includes('iOS') ? 'ios' : 'android';
-  const px2rpx = screenWidth ? 750 / screenWidth : 1;
-  const navigationHeight = menuButton.bottom
-    ? menuButton.bottom + (menuButton.top - statusBarHeight)
-    : statusBarHeight + 44;
-
-  return {
-    ...info,
-    env: getEnv(),
-    os,
-    isDevtools: platform === 'devtools',
-    pixelRatio,
-    screenWidth,
-    screenHeight,
-    statusBarHeight,
-    navigationHeight,
-    menuButton,
-    safeArea,
-    safeBottom: (screenHeight - safeArea.bottom) * px2rpx,
-    px2rpx,
-  };
+function appendQuery(url, query = {}) {
+  const entries = Object.entries(query).flatMap(([key, value]) => {
+    if (value === undefined) return [];
+    const values = Array.isArray(value) ? value : [value];
+    return values.map((item) => `${encodeURIComponent(key)}=${encodeURIComponent(item ?? '')}`);
+  });
+  if (!entries.length) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}${entries.join('&')}`;
 }
 
 class PageContext {
@@ -71,14 +34,36 @@ class PageContext {
     this.tabs = [];
     this.tabMap = new Map();
     this.plugins = [];
+    this.runtime = {};
   }
 
   init(options = {}) {
+    if (options.adapter) {
+      const adapter = typeof options.adapter === 'string' ? { name: options.adapter } : options.adapter;
+      initPlatform(adapter.name, adapter.overwrites);
+    }
+    if (!platform()) {
+      throw new Error('Platform is not initialized; call initPlatform() or pass initMP({ adapter })');
+    }
+
     this.info = options.systemInfo || getSystemInfo();
     this.plugins = options.plugins || [];
+    this.runtime = {
+      getCurrentPages: () => globalThis.getCurrentPages?.() || [],
+      createSelectorQuery: (page) => page.createSelectorQuery(),
+      ...options.runtime,
+    };
     this.tabs = (options.tabs || []).map((tab, index) => ({ ...tab, index }));
     this.tabMap = new Map(this.tabs.map((tab) => [normalizeRoute(tab.pagePath), tab]));
     return this;
+  }
+
+  get api() {
+    return platform();
+  }
+
+  createQuery(page = this.current) {
+    return page ? this.runtime.createSelectorQuery(page) : undefined;
   }
 
   record(page) {
@@ -102,8 +87,27 @@ class PageContext {
 
   usePage(route) {
     const normalized = normalizeRoute(route);
-    const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+    const pages = this.runtime.getCurrentPages?.() || [];
     return pages.find((page) => normalizeRoute(page.route) === normalized);
+  }
+
+  navigate(url, query, options = {}) {
+    const target = appendQuery(url, query);
+    const tab = this.tabMap.get(normalizeRoute(target));
+    if (tab) return this.api.switchTab({ ...options, url: normalizeRoute(target) });
+    return this.api.navigateTo({ ...options, url: target });
+  }
+
+  redirect(url, query, options = {}) {
+    return this.api.redirectTo({ ...options, url: appendQuery(url, query) });
+  }
+
+  reLaunch(url, query, options = {}) {
+    return this.api.reLaunch({ ...options, url: appendQuery(url, query) });
+  }
+
+  back(delta = 1, options = {}) {
+    return this.api.navigateBack({ ...options, delta });
   }
 
   whenReady(page = this.current) {
@@ -121,8 +125,7 @@ class PageContext {
     await this.whenReady(page);
 
     return new Promise((resolve) => {
-      page
-        .createSelectorQuery()
+      this.createQuery(page)
         .select(selector)
         .boundingClientRect((rect) => {
           if (!rect || options.rpx === false) return resolve(rect);
@@ -142,14 +145,13 @@ class PageContext {
     await this.whenReady(page);
     return Promise.all([
       new Promise((resolve) => {
-        page
-          .createSelectorQuery()
+        this.createQuery(page)
           .select(selector)
           .node((res) => resolve(res?.node))
           .exec();
       }),
       new Promise((resolve) => {
-        page.createSelectorQuery().select(selector).boundingClientRect(resolve).exec();
+        this.createQuery(page).select(selector).boundingClientRect(resolve).exec();
       }),
     ]);
   }
@@ -232,3 +234,5 @@ export function definePage(factory) {
     },
   });
 }
+
+export { getEnv, getSystemInfo };

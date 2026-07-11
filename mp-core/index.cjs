@@ -19,7 +19,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.js
 var index_exports = {};
 __export(index_exports, {
-  MP_CORE_VERSION: () => MP_CORE_VERSION,
+  VERSION: () => VERSION,
   bindStore: () => bindStore,
   definePage: () => definePage,
   defineStore: () => defineStore,
@@ -34,6 +34,232 @@ __export(index_exports, {
   useStore: () => useStore
 });
 module.exports = __toCommonJS(index_exports);
+
+// ../mp-adapter/src/platform.js
+var info = {
+  name: "",
+  overwrites: {},
+  adapter: null
+};
+var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+function nativePlatform() {
+  return globalThis[getName()];
+}
+function createAdapter(overwrites) {
+  let boundNative;
+  let boundMethods = /* @__PURE__ */ new WeakMap();
+  return new Proxy(
+    {},
+    {
+      get(target, key, receiver) {
+        if (hasOwn(overwrites, key)) {
+          return Reflect.get(overwrites, key, receiver);
+        }
+        const native = nativePlatform();
+        const value = Reflect.get(native, key, native);
+        if (typeof value === "function") {
+          if (native !== boundNative) {
+            boundNative = native;
+            boundMethods = /* @__PURE__ */ new WeakMap();
+          }
+          if (!boundMethods.has(value)) {
+            boundMethods.set(value, value.bind(native));
+          }
+          return boundMethods.get(value);
+        }
+        return value;
+      },
+      set(target, key, value, receiver) {
+        if (hasOwn(overwrites, key)) {
+          return Reflect.set(overwrites, key, value);
+        }
+        return Reflect.set(nativePlatform(), key, value);
+      },
+      has(target, key) {
+        return hasOwn(overwrites, key) || key in nativePlatform();
+      },
+      ownKeys(target) {
+        return [.../* @__PURE__ */ new Set([...Reflect.ownKeys(nativePlatform()), ...Reflect.ownKeys(overwrites)])];
+      },
+      getOwnPropertyDescriptor(target, key) {
+        if (hasOwn(overwrites, key)) {
+          const descriptor2 = Reflect.getOwnPropertyDescriptor(overwrites, key);
+          return { ...descriptor2, configurable: true };
+        }
+        const descriptor = Reflect.getOwnPropertyDescriptor(nativePlatform(), key);
+        return descriptor && { ...descriptor, configurable: true };
+      }
+    }
+  );
+}
+function getName() {
+  return info.name;
+}
+function platform() {
+  if (!info.name) return void 0;
+  return info.adapter;
+}
+function initPlatform(name, overwrites = {}) {
+  if (typeof name !== "string" || !name) {
+    throw new TypeError("Platform name must be a non-empty string");
+  }
+  if (overwrites === null || typeof overwrites !== "object") {
+    throw new TypeError("Platform overwrites must be an object");
+  }
+  info.name = name;
+  info.overwrites = overwrites;
+  info.adapter = createAdapter(overwrites);
+  return info.adapter;
+}
+function getEnv() {
+  var _a, _b, _c;
+  let version = "develop";
+  try {
+    version = ((_c = (_b = (_a = platform()).getAccountInfoSync) == null ? void 0 : _b.call(_a).miniProgram) == null ? void 0 : _c.envVersion) || version;
+  } catch (e) {
+  }
+  return {
+    version,
+    dev: version === "develop",
+    trial: version === "trial",
+    prod: version === "release"
+  };
+}
+
+// ../mp-adapter/src/storage.js
+var getDefault = (defaults) => {
+  const value = typeof defaults === "function" ? defaults() : defaults;
+  if (Array.isArray(value)) return [...value];
+  if (value && typeof value === "object") return { ...value };
+  return value;
+};
+function createStorage(name, options = {}) {
+  if (typeof name !== "string" || !name) {
+    throw new TypeError("Storage name must be a non-empty string");
+  }
+  const { defaults, debounce = 0 } = options;
+  if (!Number.isFinite(debounce) || debounce < 0) {
+    throw new TypeError("Storage debounce must be a non-negative number");
+  }
+  let value;
+  let timer;
+  let destroyed = false;
+  const listeners = /* @__PURE__ */ new Set();
+  const ensureActive = () => {
+    if (destroyed) throw new Error(`Storage "${name}" has been destroyed`);
+  };
+  const read = () => {
+    const stored = platform().getStorageSync(name);
+    return stored === void 0 || stored === "" ? getDefault(defaults) : stored;
+  };
+  const cancel = () => {
+    if (timer !== void 0) clearTimeout(timer);
+    timer = void 0;
+  };
+  const notify = (previous) => {
+    listeners.forEach((listener) => listener(value, previous));
+  };
+  const flush = () => {
+    ensureActive();
+    cancel();
+    platform().setStorageSync(name, value);
+    return value;
+  };
+  const schedule = () => {
+    cancel();
+    if (debounce === 0) flush();
+    else timer = setTimeout(flush, debounce);
+  };
+  value = read();
+  return {
+    get name() {
+      return name;
+    },
+    get() {
+      ensureActive();
+      return value;
+    },
+    set(nextValue) {
+      ensureActive();
+      const previous = value;
+      value = typeof nextValue === "function" ? nextValue(value) : nextValue;
+      schedule();
+      notify(previous);
+      return value;
+    },
+    patch(partial) {
+      ensureActive();
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new TypeError("Storage value must be an object to patch it");
+      }
+      return this.set({ ...value, ...partial });
+    },
+    reload() {
+      ensureActive();
+      cancel();
+      const previous = value;
+      value = read();
+      notify(previous);
+      return value;
+    },
+    flush,
+    remove() {
+      ensureActive();
+      cancel();
+      platform().removeStorageSync(name);
+      const previous = value;
+      value = getDefault(defaults);
+      notify(previous);
+      return value;
+    },
+    subscribe(listener) {
+      ensureActive();
+      if (typeof listener !== "function") throw new TypeError("Storage listener must be a function");
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    destroy() {
+      if (destroyed) return;
+      cancel();
+      listeners.clear();
+      destroyed = true;
+    }
+  };
+}
+
+// ../mp-adapter/src/system.js
+function getSystemInfo() {
+  var _a;
+  const api = platform();
+  const info2 = api.getSystemInfoSync();
+  const { system = "", platform: systemPlatform = "", statusBarHeight = 0, screenWidth = 0, screenHeight = 0, pixelRatio = 1 } = info2;
+  const safeArea = info2.safeArea || {
+    left: 0,
+    right: screenWidth,
+    top: 0,
+    bottom: screenHeight,
+    width: screenWidth,
+    height: screenHeight
+  };
+  const menuButton = ((_a = api.getMenuButtonBoundingClientRect) == null ? void 0 : _a.call(api)) || {};
+  const px2rpx = screenWidth ? 750 / screenWidth : 1;
+  const navigationHeight = menuButton.bottom ? menuButton.bottom + (menuButton.top - statusBarHeight) : statusBarHeight + 44;
+  return {
+    ...info2,
+    env: getEnv(),
+    os: /ios/i.test(system) ? "ios" : "android",
+    isDevtools: systemPlatform === "devtools",
+    pixelRatio,
+    screenWidth,
+    screenHeight,
+    statusBarHeight,
+    navigationHeight,
+    menuButton,
+    safeArea,
+    safeBottom: (screenHeight - safeArea.bottom) * px2rpx,
+    px2rpx
+  };
+}
 
 // src/store-bind.js
 var UnsubscribersKey = "__storeUnsubscribers";
@@ -70,51 +296,14 @@ function deferred() {
   });
   return { promise, resolve };
 }
-function getEnv() {
-  var _a, _b;
-  let version = "develop";
-  try {
-    version = ((_b = (_a = wx.getAccountInfoSync) == null ? void 0 : _a.call(wx).miniProgram) == null ? void 0 : _b.envVersion) || version;
-  } catch (e) {
-  }
-  return {
-    version,
-    dev: version === "develop",
-    trial: version === "trial",
-    prod: version === "release"
-  };
-}
-function getSystemInfo() {
-  var _a;
-  const info = wx.getSystemInfoSync();
-  const { system = "", platform = "", statusBarHeight = 0, screenWidth = 0, screenHeight = 0, pixelRatio = 1 } = info;
-  const safeArea = info.safeArea || {
-    left: 0,
-    right: screenWidth,
-    top: 0,
-    bottom: screenHeight,
-    width: screenWidth,
-    height: screenHeight
-  };
-  const menuButton = ((_a = wx.getMenuButtonBoundingClientRect) == null ? void 0 : _a.call(wx)) || {};
-  const os = system.includes("iOS") ? "ios" : "android";
-  const px2rpx = screenWidth ? 750 / screenWidth : 1;
-  const navigationHeight = menuButton.bottom ? menuButton.bottom + (menuButton.top - statusBarHeight) : statusBarHeight + 44;
-  return {
-    ...info,
-    env: getEnv(),
-    os,
-    isDevtools: platform === "devtools",
-    pixelRatio,
-    screenWidth,
-    screenHeight,
-    statusBarHeight,
-    navigationHeight,
-    menuButton,
-    safeArea,
-    safeBottom: (screenHeight - safeArea.bottom) * px2rpx,
-    px2rpx
-  };
+function appendQuery(url, query = {}) {
+  const entries = Object.entries(query).flatMap(([key, value]) => {
+    if (value === void 0) return [];
+    const values = Array.isArray(value) ? value : [value];
+    return values.map((item) => `${encodeURIComponent(key)}=${encodeURIComponent(item != null ? item : "")}`);
+  });
+  if (!entries.length) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}${entries.join("&")}`;
 }
 var PageContext = class {
   constructor() {
@@ -123,13 +312,35 @@ var PageContext = class {
     this.tabs = [];
     this.tabMap = /* @__PURE__ */ new Map();
     this.plugins = [];
+    this.runtime = {};
   }
   init(options = {}) {
+    if (options.adapter) {
+      const adapter = typeof options.adapter === "string" ? { name: options.adapter } : options.adapter;
+      initPlatform(adapter.name, adapter.overwrites);
+    }
+    if (!platform()) {
+      throw new Error("Platform is not initialized; call initPlatform() or pass initMP({ adapter })");
+    }
     this.info = options.systemInfo || getSystemInfo();
     this.plugins = options.plugins || [];
+    this.runtime = {
+      getCurrentPages: () => {
+        var _a;
+        return ((_a = globalThis.getCurrentPages) == null ? void 0 : _a.call(globalThis)) || [];
+      },
+      createSelectorQuery: (page) => page.createSelectorQuery(),
+      ...options.runtime
+    };
     this.tabs = (options.tabs || []).map((tab, index) => ({ ...tab, index }));
     this.tabMap = new Map(this.tabs.map((tab) => [normalizeRoute(tab.pagePath), tab]));
     return this;
+  }
+  get api() {
+    return platform();
+  }
+  createQuery(page = this.current) {
+    return page ? this.runtime.createSelectorQuery(page) : void 0;
   }
   record(page) {
     let record = pageRecords.get(page);
@@ -150,9 +361,25 @@ var PageContext = class {
     if (tab) (_b = (_a = page.getTabBar) == null ? void 0 : _a.call(page)) == null ? void 0 : _b.setData({ selected: tab.index });
   }
   usePage(route) {
+    var _a, _b;
     const normalized = normalizeRoute(route);
-    const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+    const pages = ((_b = (_a = this.runtime).getCurrentPages) == null ? void 0 : _b.call(_a)) || [];
     return pages.find((page) => normalizeRoute(page.route) === normalized);
+  }
+  navigate(url, query, options = {}) {
+    const target = appendQuery(url, query);
+    const tab = this.tabMap.get(normalizeRoute(target));
+    if (tab) return this.api.switchTab({ ...options, url: normalizeRoute(target) });
+    return this.api.navigateTo({ ...options, url: target });
+  }
+  redirect(url, query, options = {}) {
+    return this.api.redirectTo({ ...options, url: appendQuery(url, query) });
+  }
+  reLaunch(url, query, options = {}) {
+    return this.api.reLaunch({ ...options, url: appendQuery(url, query) });
+  }
+  back(delta = 1, options = {}) {
+    return this.api.navigateBack({ ...options, delta });
   }
   whenReady(page = this.current) {
     return page ? this.record(page).ready.promise : Promise.resolve();
@@ -166,7 +393,7 @@ var PageContext = class {
     if (!page) return;
     await this.whenReady(page);
     return new Promise((resolve) => {
-      page.createSelectorQuery().select(selector).boundingClientRect((rect) => {
+      this.createQuery(page).select(selector).boundingClientRect((rect) => {
         var _a;
         if (!rect || options.rpx === false) return resolve(rect);
         const ratio = ((_a = this.info) == null ? void 0 : _a.px2rpx) || 1;
@@ -183,10 +410,10 @@ var PageContext = class {
     await this.whenReady(page);
     return Promise.all([
       new Promise((resolve) => {
-        page.createSelectorQuery().select(selector).node((res) => resolve(res == null ? void 0 : res.node)).exec();
+        this.createQuery(page).select(selector).node((res) => resolve(res == null ? void 0 : res.node)).exec();
       }),
       new Promise((resolve) => {
-        page.createSelectorQuery().select(selector).boundingClientRect(resolve).exec();
+        this.createQuery(page).select(selector).boundingClientRect(resolve).exec();
       })
     ]);
   }
@@ -311,9 +538,26 @@ function createStore(name, instanceName, definition) {
   const listeners = /* @__PURE__ */ new Set();
   let state = cloneState(definition.state());
   let destroyed = false;
+  let persistence;
+  let stopPersisting;
+  if (definition.persist) {
+    const config = definition.persist === true ? {} : typeof definition.persist === "string" ? { key: definition.persist } : definition.persist;
+    const key = typeof config.key === "function" ? config.key(instanceName, name) : config.key || instanceName;
+    persistence = createStorage(key, {
+      defaults: () => cloneState(state),
+      debounce: config.debounce
+    });
+    const stored = persistence.get();
+    if (stored && typeof stored === "object" && !Array.isArray(stored)) {
+      state = { ...state, ...cloneState(stored) };
+    }
+  }
   const store = {
     $id: instanceName,
     $definition: name,
+    get $storage() {
+      return persistence;
+    },
     get state() {
       return readonly(state);
     },
@@ -342,6 +586,11 @@ function createStore(name, instanceName, definition) {
       var _a2;
       if (destroyed) return;
       (_a2 = definition.onDestroy) == null ? void 0 : _a2.call(store);
+      stopPersisting == null ? void 0 : stopPersisting();
+      if (persistence) {
+        persistence.flush();
+        persistence.destroy();
+      }
       destroyed = true;
       listeners.clear();
       instances.delete(instanceName);
@@ -367,6 +616,9 @@ function createStore(name, instanceName, definition) {
     };
   });
   instances.set(instanceName, store);
+  if (persistence) {
+    stopPersisting = store.subscribe((currentState) => persistence.set(cloneState(currentState)), false);
+  }
   (_a = definition.onCreate) == null ? void 0 : _a.call(store);
   return store;
 }
@@ -377,7 +629,8 @@ function defineStore(name, options = {}) {
     state: options.state || (() => ({})),
     actions: options.actions || {},
     onCreate: options.onCreate,
-    onDestroy: options.onDestroy
+    onDestroy: options.onDestroy,
+    persist: options.persist
   };
   definitions.set(name, definition);
   return (instanceName = name) => useStore(name, instanceName);
@@ -403,4 +656,4 @@ function hasStore(instanceName) {
 }
 
 // src/index.js
-var MP_CORE_VERSION = "0.1.1";
+var VERSION = "0.1.1";

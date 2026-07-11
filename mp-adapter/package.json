@@ -3,24 +3,25 @@
   "version": "0.1.0",
   "description": "Adapters for Node.js and WeChat Mini Program projects.",
   "type": "module",
-  "main": "./index.js",
+  "main": "./index.cjs",
   "module": "./src/index.js",
   "exports": {
     ".": {
       "import": "./src/index.js",
-      "require": "./index.js",
-      "default": "./index.js"
+      "require": "./index.cjs",
+      "default": "./index.cjs"
     }
   },
   "files": [
     "src",
-    "index.js"
+    "index.cjs"
   ],
   "sideEffects": false,
   "scripts": {
     "dev:push": "npm run build && yalc push",
-    "build": "esbuild src/index.js --bundle --format=cjs --platform=neutral --target=es2018 --outfile=index.js",
-    "check": "npm run build && node --check src/index.js && node --check index.js",
+    "build": "esbuild src/index.js --bundle --format=cjs --platform=neutral --target=es2018 --outfile=index.cjs",
+    "check": "npm run build && node --check src/index.js && node --check index.cjs",
+    "test": "node --test",
     "prepack": "npm run build",
     "prepublishOnly": "npm run check"
   },
@@ -38,6 +39,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "prettier": "3.9.5"
   }
 }

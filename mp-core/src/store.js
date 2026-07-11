@@ -1,3 +1,5 @@
+import { createStorage } from '@chin0102/mp-adapter';
+
 import { readonly } from './proxy.js';
 
 const definitions = new Map();
@@ -21,10 +23,29 @@ function createStore(name, instanceName, definition) {
   const listeners = new Set();
   let state = cloneState(definition.state());
   let destroyed = false;
+  let persistence;
+  let stopPersisting;
+
+  if (definition.persist) {
+    const config = definition.persist === true ? {} : typeof definition.persist === 'string' ? { key: definition.persist } : definition.persist;
+    const key = typeof config.key === 'function' ? config.key(instanceName, name) : config.key || instanceName;
+    persistence = createStorage(key, {
+      defaults: () => cloneState(state),
+      debounce: config.debounce,
+    });
+    const stored = persistence.get();
+    if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+      state = { ...state, ...cloneState(stored) };
+    }
+  }
 
   const store = {
     $id: instanceName,
     $definition: name,
+
+    get $storage() {
+      return persistence;
+    },
 
     get state() {
       return readonly(state);
@@ -60,6 +81,11 @@ function createStore(name, instanceName, definition) {
       if (destroyed) return;
 
       definition.onDestroy?.call(store);
+      stopPersisting?.();
+      if (persistence) {
+        persistence.flush();
+        persistence.destroy();
+      }
       destroyed = true;
       listeners.clear();
       instances.delete(instanceName);
@@ -92,6 +118,9 @@ function createStore(name, instanceName, definition) {
   });
 
   instances.set(instanceName, store);
+  if (persistence) {
+    stopPersisting = store.subscribe((currentState) => persistence.set(cloneState(currentState)), false);
+  }
   definition.onCreate?.call(store);
   return store;
 }
@@ -105,6 +134,7 @@ export function defineStore(name, options = {}) {
     actions: options.actions || {},
     onCreate: options.onCreate,
     onDestroy: options.onDestroy,
+    persist: options.persist,
   };
 
   definitions.set(name, definition);

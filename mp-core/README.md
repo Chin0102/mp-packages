@@ -1,6 +1,6 @@
 # mp-core
 
-同时面向 Node.js 和微信小程序的 JavaScript npm 包。Node.js 使用 ESM 源码入口；微信小程序和 CommonJS 使用预构建的单文件入口 `index.cjs`。
+同时面向 Node.js 和微信小程序的 JavaScript npm 包。平台能力由 `@chin0102/mp-adapter` 提供；Node.js 使用 ESM 源码入口，微信小程序和 CommonJS 使用预构建的单文件入口 `index.cjs`。
 
 ## 开发
 
@@ -20,6 +20,86 @@ Node.js 同时支持两种加载方式：
 ```js
 import { defineStore } from '@chin0102/mp-core';
 const { defineStore } = require('@chin0102/mp-core');
+```
+
+## 初始化
+
+可以先显式初始化 adapter：
+
+```js
+import { initPlatform } from '@chin0102/mp-adapter';
+import { initMP } from '@chin0102/mp-core';
+
+initPlatform('wx');
+initMP({ tabs, plugins });
+```
+
+也可以在 `initMP` 中统一初始化：
+
+```js
+initMP({
+  adapter: {
+    name: 'my',
+    overwrites: platformOverwrites,
+  },
+  tabs,
+  plugins,
+});
+```
+
+`mp.api` 始终指向当前 adapter。`getEnv` 和 `getSystemInfo` 继续从 `mp-core` 导出，但实现由 `mp-adapter` 提供。
+
+## 导航
+
+```js
+import { mp } from '@chin0102/mp-core';
+
+mp.navigate('/pages/detail/index', { id: 1 });
+mp.redirect('/pages/login/index', { reason: 'expired' });
+mp.reLaunch('/pages/home/index');
+mp.back(1);
+```
+
+`navigate` 会根据初始化时的 `tabs` 自动选择 `switchTab` 或 `navigateTo`。切换到 tab 页面时不会携带 query。
+
+## Store 持久化
+
+```js
+const useSetting = defineStore('setting', {
+  state: () => ({
+    sound: true,
+    volume: 1,
+  }),
+  persist: {
+    key: 'app-setting',
+    debounce: 1000,
+  },
+});
+```
+
+`persist` 支持三种形式：
+
+```js
+persist: true; // 使用 Store 实例名
+persist: 'custom-key'; // 使用指定 key
+persist: {
+  (key, debounce);
+} // 完整配置
+```
+
+Store 创建时同步读取已持久化状态并与默认状态合并；状态变化后通过 adapter 的 `createStorage` 保存；销毁前会立即 flush。持久化实例可以通过 `store.$storage` 访问。
+
+## Runtime 注入
+
+`getCurrentPages` 和页面选择器是小程序运行时能力，不属于平台 API 对象。其他平台存在差异时可以注入：
+
+```js
+initMP({
+  runtime: {
+    getCurrentPages: () => globalThis.getCurrentPages?.() || [],
+    createSelectorQuery: (page) => platform().createSelectorQuery().in(page),
+  },
+});
 ```
 
 ## 在小程序中本地联调

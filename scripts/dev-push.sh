@@ -10,18 +10,18 @@ if ! command -v yalc >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Building and publishing @chin0102/mp-adapter..."
+echo "Building and pushing @chin0102/mp-adapter..."
 (
   cd "$ROOT_DIR/mp-adapter"
   npm run build
-  yalc publish
+  yalc push
 )
 
-echo "Building and publishing @chin0102/mp-core..."
+echo "Building and pushing @chin0102/mp-core..."
 (
   cd "$ROOT_DIR/mp-core"
   npm run build
-  yalc publish
+  yalc push
 )
 
-echo "Local packages published successfully. Rebuild npm in WeChat DevTools."
+echo "Local packages pushed successfully. Rebuild npm in WeChat DevTools."
