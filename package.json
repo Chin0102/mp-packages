@@ -1,0 +1,11 @@
+{
+  "name": "mp-packages",
+  "private": true,
+  "scripts": {
+    "dev:push":"sh scripts/dev-publish.sh"
+  },
+  "workspaces": [
+    "mp-adapter",
+    "mp-core"
+  ]
+}
