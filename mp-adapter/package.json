@@ -1,6 +1,6 @@
 {
   "name": "@chin0102/mp-adapter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Adapters for Node.js and WeChat Mini Program projects.",
   "type": "module",
   "main": "./dist/index.js",

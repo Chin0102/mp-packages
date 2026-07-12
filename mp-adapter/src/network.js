@@ -12,6 +12,10 @@ export class HttpError extends Error {
   }
 }
 
+export function login(options = {}) {
+  return invoke('login', options);
+}
+
 export function requestData(options, config = {}) {
   const validateStatus = config.validateStatus || defaultValidateStatus;
   const transform = config.transform || defaultTransform;

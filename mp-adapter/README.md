@@ -94,6 +94,16 @@ pending.task.abort();
 const data = await pending;
 ```
 
+### 平台登录
+
+```js
+import { login } from '@chin0102/mp-adapter';
+
+const { code } = await login({ timeout: 5000 });
+```
+
+`login()` 将微信形状的平台登录 API 转为 Promise，其他平台的参数和返回值差异可以通过 `initPlatform` 的 `overwrites.login` 适配。
+
 ### 持久化存储
 
 ```js

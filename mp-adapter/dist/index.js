@@ -30,6 +30,7 @@ __export(index_exports, {
   initPlatform: () => initPlatform,
   isAuthorized: () => isAuthorized,
   listenForUpdate: () => listenForUpdate,
+  login: () => login,
   platform: () => platform,
   requestData: () => requestData,
   uploadFile: () => uploadFile,
@@ -190,6 +191,9 @@ var HttpError = class extends Error {
     this.response = response;
   }
 };
+function login(options = {}) {
+  return invoke("login", options);
+}
 function requestData(options, config = {}) {
   const validateStatus = config.validateStatus || defaultValidateStatus;
   const transform = config.transform || defaultTransform;
@@ -416,4 +420,4 @@ function listenForUpdate(options = {}) {
 }
 
 // src/index.js
-var VERSION = "0.1.0";
+var VERSION = "0.1.1";

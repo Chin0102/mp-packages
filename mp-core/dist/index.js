@@ -19,13 +19,17 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.js
 var index_exports = {};
 __export(index_exports, {
+  ApiError: () => ApiError,
+  AuthError: () => AuthError,
   VERSION: () => VERSION,
   bindStore: () => bindStore,
+  createApiClient: () => createApiClient,
+  createAuth: () => createAuth,
   definePage: () => definePage,
   defineStore: () => defineStore,
   destroyStore: () => destroyStore,
-  getEnv: () => import_mp_adapter.getEnv,
-  getSystemInfo: () => import_mp_adapter.getSystemInfo,
+  getEnv: () => import_mp_adapter3.getEnv,
+  getSystemInfo: () => import_mp_adapter3.getSystemInfo,
   hasStore: () => hasStore,
   initMP: () => initMP,
   mp: () => mp,
@@ -35,8 +39,228 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/page.js
+// src/api-client.js
 var import_mp_adapter = require("@chin0102/mp-adapter");
+var ApiError = class extends Error {
+  constructor(message, code, data) {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.data = data;
+  }
+};
+var defaultUnauthorized = (error) => error instanceof import_mp_adapter.HttpError && error.statusCode === 401;
+var identity = (value) => value;
+var joinURL = (baseURL, path) => {
+  if (!baseURL || /^https?:\/\//i.test(path)) return path;
+  return `${baseURL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+};
+function createApiClient(options = {}) {
+  const {
+    baseURL = "",
+    auth,
+    getAccessToken = (session) => session == null ? void 0 : session.accessToken,
+    isUnauthorized = defaultUnauthorized,
+    transformResponse = identity
+  } = options;
+  if (!auth || typeof auth.login !== "function" || typeof auth.renewIfCurrent !== "function") {
+    throw new TypeError("auth must be created by createAuth");
+  }
+  if (typeof getAccessToken !== "function") throw new TypeError("getAccessToken must be a function");
+  if (typeof isUnauthorized !== "function") throw new TypeError("isUnauthorized must be a function");
+  if (typeof transformResponse !== "function") throw new TypeError("transformResponse must be a function");
+  const buildOptions = (path, requestOptions, session) => {
+    const token = session === null ? void 0 : getAccessToken(session);
+    return {
+      ...requestOptions,
+      url: joinURL(baseURL, path),
+      header: {
+        ...requestOptions.header,
+        ...token ? { Authorization: `Bearer ${token}` } : {}
+      }
+    };
+  };
+  const execute = async (transport, path, requestOptions = {}, config = {}) => {
+    const needAuth = config.auth !== false;
+    const retryAuth = config.retryAuth !== false;
+    let session = needAuth ? await auth.login(config.authContext) : null;
+    let sessionVersion = auth.getVersion();
+    const send = () => transport(buildOptions(path, requestOptions, session), config.transport).then(
+      (data) => transformResponse(data, { path, requestOptions })
+    );
+    try {
+      return await send();
+    } catch (error) {
+      if (!needAuth || !retryAuth || !isUnauthorized(error)) throw error;
+      session = await auth.renewIfCurrent(sessionVersion, config.authContext);
+      sessionVersion = auth.getVersion();
+      return send();
+    }
+  };
+  const request = (path, requestOptions, config) => execute(import_mp_adapter.requestData, path, requestOptions, config);
+  return {
+    request,
+    upload(path, uploadOptions, config) {
+      return execute(import_mp_adapter.uploadFile, path, uploadOptions, config);
+    },
+    get(path, data, config) {
+      return request(path, { method: "GET", data }, config);
+    },
+    post(path, data, config) {
+      return request(path, { method: "POST", data }, config);
+    },
+    put(path, data, config) {
+      return request(path, { method: "PUT", data }, config);
+    },
+    patch(path, data, config) {
+      return request(path, { method: "PATCH", data }, config);
+    },
+    delete(path, data, config) {
+      return request(path, { method: "DELETE", data }, config);
+    }
+  };
+}
+
+// src/auth.js
+var import_mp_adapter2 = require("@chin0102/mp-adapter");
+var AuthError = class extends Error {
+  constructor(message, options = {}) {
+    super(message, options.cause === void 0 ? void 0 : { cause: options.cause });
+    this.name = "AuthError";
+    this.cause = options.cause;
+  }
+};
+function createAuth(options = {}) {
+  var _a;
+  const { login: loginConfig, authenticate, refresh, onSessionChange } = options;
+  const customAuthenticate = typeof authenticate === "function";
+  const configuredLogin = loginConfig !== void 0;
+  if (customAuthenticate === configuredLogin) {
+    throw new TypeError("Provide exactly one of login or authenticate");
+  }
+  if (configuredLogin && (!loginConfig || typeof loginConfig !== "object")) {
+    throw new TypeError("login must be an object");
+  }
+  if (configuredLogin && (typeof loginConfig.url !== "string" || !loginConfig.url)) {
+    throw new TypeError("login.url must be a non-empty string");
+  }
+  if (authenticate !== void 0 && !customAuthenticate) {
+    throw new TypeError("authenticate must be a function");
+  }
+  if (refresh !== void 0 && typeof refresh !== "function" && (!refresh || typeof refresh !== "object")) {
+    throw new TypeError("refresh must be a function or an object");
+  }
+  if (refresh && typeof refresh === "object" && (typeof refresh.url !== "string" || !refresh.url)) {
+    throw new TypeError("refresh.url must be a non-empty string");
+  }
+  if (onSessionChange !== void 0 && typeof onSessionChange !== "function") {
+    throw new TypeError("onSessionChange must be a function");
+  }
+  let session = (_a = options.initialSession) != null ? _a : null;
+  let version = 0;
+  let pending = null;
+  const listeners = /* @__PURE__ */ new Set();
+  const requestSession = async (config, input) => {
+    const { data, transform, transport, ...requestOptions } = config;
+    const requestDataValue = typeof data === "function" ? await data(input) : data;
+    const response = await (0, import_mp_adapter2.requestData)(
+      {
+        method: "POST",
+        ...requestOptions,
+        data: requestDataValue
+      },
+      transport
+    );
+    return typeof transform === "function" ? transform(response, input) : response;
+  };
+  const performLogin = customAuthenticate ? authenticate : async (context) => {
+    const { platform: platformOptions, data, ...requestConfig } = loginConfig;
+    const loginResult = await (0, import_mp_adapter2.login)(platformOptions);
+    if (!(loginResult == null ? void 0 : loginResult.code)) {
+      throw new AuthError("Platform login did not return a code");
+    }
+    const input = { code: loginResult.code, loginResult, context };
+    return requestSession(
+      {
+        ...requestConfig,
+        data: typeof data === "function" ? data : { ...data || {}, code: loginResult.code }
+      },
+      input
+    );
+  };
+  const performRefresh = (current, context) => {
+    if (typeof refresh === "function") return refresh(current, context);
+    if (refresh) return requestSession(refresh, { session: current, context });
+    return performLogin(context);
+  };
+  const updateSession = (nextSession) => {
+    if (nextSession == null) throw new AuthError("Authentication returned an empty session");
+    const previous = session;
+    session = nextSession;
+    version += 1;
+    onSessionChange == null ? void 0 : onSessionChange(session, previous);
+    listeners.forEach((listener) => listener(session, previous));
+    return session;
+  };
+  const clear = () => {
+    version += 1;
+    if (session === null) return;
+    const previous = session;
+    session = null;
+    onSessionChange == null ? void 0 : onSessionChange(null, previous);
+    listeners.forEach((listener) => listener(null, previous));
+  };
+  const run = (operation) => {
+    if (pending) return pending;
+    const operationVersion = version;
+    pending = Promise.resolve().then(operation).then((nextSession) => {
+      if (operationVersion !== version) {
+        throw new AuthError("Authentication result is stale");
+      }
+      return updateSession(nextSession);
+    }).catch((error) => {
+      throw error instanceof AuthError ? error : new AuthError("Authentication failed", { cause: error });
+    }).finally(() => {
+      pending = null;
+    });
+    return pending;
+  };
+  const login = (context = {}, config = {}) => {
+    if (session !== null && !config.force) return Promise.resolve(session);
+    return run(() => performLogin(context));
+  };
+  const renew = (context = {}) => {
+    const current = session;
+    return run(() => current === null ? performLogin(context) : performRefresh(current, context));
+  };
+  const renewIfCurrent = (expectedVersion, context = {}) => {
+    if (expectedVersion !== version && session !== null) return Promise.resolve(session);
+    return renew(context);
+  };
+  return {
+    login,
+    renew,
+    renewIfCurrent,
+    logout: clear,
+    getSession() {
+      return session;
+    },
+    getVersion() {
+      return version;
+    },
+    isAuthenticated() {
+      return session !== null;
+    },
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new TypeError("listener must be a function");
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    }
+  };
+}
+
+// src/page.js
+var import_mp_adapter3 = require("@chin0102/mp-adapter");
 
 // src/store-bind.js
 var UnsubscribersKey = "__storeUnsubscribers";
@@ -94,12 +318,12 @@ var PageContext = class {
   init(options = {}) {
     if (options.adapter) {
       const adapter = typeof options.adapter === "string" ? { name: options.adapter } : options.adapter;
-      (0, import_mp_adapter.initPlatform)(adapter.name, adapter.overwrites);
+      (0, import_mp_adapter3.initPlatform)(adapter.name, adapter.overwrites);
     }
-    if (!(0, import_mp_adapter.platform)()) {
+    if (!(0, import_mp_adapter3.platform)()) {
       throw new Error("Platform is not initialized; call initPlatform() or pass initMP({ adapter })");
     }
-    this.info = options.systemInfo || (0, import_mp_adapter.getSystemInfo)();
+    this.info = options.systemInfo || (0, import_mp_adapter3.getSystemInfo)();
     this.plugins = options.plugins || [];
     this.runtime = {
       getCurrentPages: () => {
@@ -114,7 +338,7 @@ var PageContext = class {
     return this;
   }
   get api() {
-    return (0, import_mp_adapter.platform)();
+    return (0, import_mp_adapter3.platform)();
   }
   createQuery(page = this.current) {
     return page ? this.runtime.createSelectorQuery(page) : void 0;
@@ -295,7 +519,7 @@ function readonly(obj) {
 }
 
 // src/store.js
-var import_mp_adapter2 = require("@chin0102/mp-adapter");
+var import_mp_adapter4 = require("@chin0102/mp-adapter");
 var definitions = /* @__PURE__ */ new Map();
 var instances = /* @__PURE__ */ new Map();
 function cloneState(value) {
@@ -321,7 +545,7 @@ function createStore(name, instanceName, definition) {
   if (definition.persist) {
     const config = definition.persist === true ? {} : typeof definition.persist === "string" ? { key: definition.persist } : definition.persist;
     const key = typeof config.key === "function" ? config.key(instanceName, name) : config.key || instanceName;
-    persistence = (0, import_mp_adapter2.createStorage)(key, {
+    persistence = (0, import_mp_adapter4.createStorage)(key, {
       defaults: () => cloneState(state),
       debounce: config.debounce
     });

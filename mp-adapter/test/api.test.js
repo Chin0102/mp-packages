@@ -10,6 +10,7 @@ import {
   initPlatform,
   isAuthorized,
   listenForUpdate,
+  login,
   requestData,
   uploadFile,
   vibrate,
@@ -31,6 +32,21 @@ function callbackApi(handler = (options) => options) {
     }
   };
 }
+
+test('login promisifies the platform login API and exposes its task', async () => {
+  const task = { abort() {} };
+  globalThis.wx = {
+    login(options) {
+      options.success({ code: 'wx-code' });
+      return task;
+    },
+  };
+  initPlatform('wx');
+
+  const pending = login({ timeout: 3000 });
+  assert.equal(pending.task, task);
+  assert.deepEqual(await pending, { code: 'wx-code' });
+});
 
 test('requestData validates status, transforms data, and exposes RequestTask', async () => {
   const task = { abort() {} };

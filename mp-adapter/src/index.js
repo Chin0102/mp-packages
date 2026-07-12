@@ -1,7 +1,7 @@
-export const VERSION = '0.1.0';
+export const VERSION = '0.1.1';
 
 export { vibrate } from './device.js';
-export { HttpError, requestData, uploadFile } from './network.js';
+export { HttpError, login, requestData, uploadFile } from './network.js';
 export { authorize, getSetting, isAuthorized } from './permission.js';
 export { getEnv, getName, initPlatform, platform } from './platform.js';
 export { createStorage } from './storage.js';
