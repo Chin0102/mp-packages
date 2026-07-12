@@ -24,8 +24,8 @@ __export(index_exports, {
   definePage: () => definePage,
   defineStore: () => defineStore,
   destroyStore: () => destroyStore,
-  getEnv: () => getEnv,
-  getSystemInfo: () => getSystemInfo,
+  getEnv: () => import_mp_adapter.getEnv,
+  getSystemInfo: () => import_mp_adapter.getSystemInfo,
   hasStore: () => hasStore,
   initMP: () => initMP,
   mp: () => mp,
@@ -35,231 +35,8 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// ../mp-adapter/src/platform.js
-var info = {
-  name: "",
-  overwrites: {},
-  adapter: null
-};
-var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
-function nativePlatform() {
-  return globalThis[getName()];
-}
-function createAdapter(overwrites) {
-  let boundNative;
-  let boundMethods = /* @__PURE__ */ new WeakMap();
-  return new Proxy(
-    {},
-    {
-      get(target, key, receiver) {
-        if (hasOwn(overwrites, key)) {
-          return Reflect.get(overwrites, key, receiver);
-        }
-        const native = nativePlatform();
-        const value = Reflect.get(native, key, native);
-        if (typeof value === "function") {
-          if (native !== boundNative) {
-            boundNative = native;
-            boundMethods = /* @__PURE__ */ new WeakMap();
-          }
-          if (!boundMethods.has(value)) {
-            boundMethods.set(value, value.bind(native));
-          }
-          return boundMethods.get(value);
-        }
-        return value;
-      },
-      set(target, key, value, receiver) {
-        if (hasOwn(overwrites, key)) {
-          return Reflect.set(overwrites, key, value);
-        }
-        return Reflect.set(nativePlatform(), key, value);
-      },
-      has(target, key) {
-        return hasOwn(overwrites, key) || key in nativePlatform();
-      },
-      ownKeys(target) {
-        return [.../* @__PURE__ */ new Set([...Reflect.ownKeys(nativePlatform()), ...Reflect.ownKeys(overwrites)])];
-      },
-      getOwnPropertyDescriptor(target, key) {
-        if (hasOwn(overwrites, key)) {
-          const descriptor2 = Reflect.getOwnPropertyDescriptor(overwrites, key);
-          return { ...descriptor2, configurable: true };
-        }
-        const descriptor = Reflect.getOwnPropertyDescriptor(nativePlatform(), key);
-        return descriptor && { ...descriptor, configurable: true };
-      }
-    }
-  );
-}
-function getName() {
-  return info.name;
-}
-function platform() {
-  if (!info.name) return void 0;
-  return info.adapter;
-}
-function initPlatform(name, overwrites = {}) {
-  if (typeof name !== "string" || !name) {
-    throw new TypeError("Platform name must be a non-empty string");
-  }
-  if (overwrites === null || typeof overwrites !== "object") {
-    throw new TypeError("Platform overwrites must be an object");
-  }
-  info.name = name;
-  info.overwrites = overwrites;
-  info.adapter = createAdapter(overwrites);
-  return info.adapter;
-}
-function getEnv() {
-  var _a, _b, _c;
-  let version = "develop";
-  try {
-    version = ((_c = (_b = (_a = platform()).getAccountInfoSync) == null ? void 0 : _b.call(_a).miniProgram) == null ? void 0 : _c.envVersion) || version;
-  } catch (e) {
-  }
-  return {
-    version,
-    dev: version === "develop",
-    trial: version === "trial",
-    prod: version === "release"
-  };
-}
-
-// ../mp-adapter/src/storage.js
-var getDefault = (defaults) => {
-  const value = typeof defaults === "function" ? defaults() : defaults;
-  if (Array.isArray(value)) return [...value];
-  if (value && typeof value === "object") return { ...value };
-  return value;
-};
-function createStorage(name, options = {}) {
-  if (typeof name !== "string" || !name) {
-    throw new TypeError("Storage name must be a non-empty string");
-  }
-  const { defaults, debounce = 0 } = options;
-  if (!Number.isFinite(debounce) || debounce < 0) {
-    throw new TypeError("Storage debounce must be a non-negative number");
-  }
-  let value;
-  let timer;
-  let destroyed = false;
-  const listeners = /* @__PURE__ */ new Set();
-  const ensureActive = () => {
-    if (destroyed) throw new Error(`Storage "${name}" has been destroyed`);
-  };
-  const read = () => {
-    const stored = platform().getStorageSync(name);
-    return stored === void 0 || stored === "" ? getDefault(defaults) : stored;
-  };
-  const cancel = () => {
-    if (timer !== void 0) clearTimeout(timer);
-    timer = void 0;
-  };
-  const notify = (previous) => {
-    listeners.forEach((listener) => listener(value, previous));
-  };
-  const flush = () => {
-    ensureActive();
-    cancel();
-    platform().setStorageSync(name, value);
-    return value;
-  };
-  const schedule = () => {
-    cancel();
-    if (debounce === 0) flush();
-    else timer = setTimeout(flush, debounce);
-  };
-  value = read();
-  return {
-    get name() {
-      return name;
-    },
-    get() {
-      ensureActive();
-      return value;
-    },
-    set(nextValue) {
-      ensureActive();
-      const previous = value;
-      value = typeof nextValue === "function" ? nextValue(value) : nextValue;
-      schedule();
-      notify(previous);
-      return value;
-    },
-    patch(partial) {
-      ensureActive();
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        throw new TypeError("Storage value must be an object to patch it");
-      }
-      return this.set({ ...value, ...partial });
-    },
-    reload() {
-      ensureActive();
-      cancel();
-      const previous = value;
-      value = read();
-      notify(previous);
-      return value;
-    },
-    flush,
-    remove() {
-      ensureActive();
-      cancel();
-      platform().removeStorageSync(name);
-      const previous = value;
-      value = getDefault(defaults);
-      notify(previous);
-      return value;
-    },
-    subscribe(listener) {
-      ensureActive();
-      if (typeof listener !== "function") throw new TypeError("Storage listener must be a function");
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    destroy() {
-      if (destroyed) return;
-      cancel();
-      listeners.clear();
-      destroyed = true;
-    }
-  };
-}
-
-// ../mp-adapter/src/system.js
-function getSystemInfo() {
-  var _a;
-  const api = platform();
-  const info2 = api.getSystemInfoSync();
-  const { system = "", platform: systemPlatform = "", statusBarHeight = 0, screenWidth = 0, screenHeight = 0, pixelRatio = 1 } = info2;
-  const safeArea = info2.safeArea || {
-    left: 0,
-    right: screenWidth,
-    top: 0,
-    bottom: screenHeight,
-    width: screenWidth,
-    height: screenHeight
-  };
-  const menuButton = ((_a = api.getMenuButtonBoundingClientRect) == null ? void 0 : _a.call(api)) || {};
-  const px2rpx = screenWidth ? 750 / screenWidth : 1;
-  const navigationHeight = menuButton.bottom ? menuButton.bottom + (menuButton.top - statusBarHeight) : statusBarHeight + 44;
-  return {
-    ...info2,
-    env: getEnv(),
-    os: /ios/i.test(system) ? "ios" : "android",
-    isDevtools: systemPlatform === "devtools",
-    pixelRatio,
-    screenWidth,
-    screenHeight,
-    statusBarHeight,
-    navigationHeight,
-    menuButton,
-    safeArea,
-    safeBottom: (screenHeight - safeArea.bottom) * px2rpx,
-    px2rpx
-  };
-}
+// src/page.js
+var import_mp_adapter = require("@chin0102/mp-adapter");
 
 // src/store-bind.js
 var UnsubscribersKey = "__storeUnsubscribers";
@@ -317,12 +94,12 @@ var PageContext = class {
   init(options = {}) {
     if (options.adapter) {
       const adapter = typeof options.adapter === "string" ? { name: options.adapter } : options.adapter;
-      initPlatform(adapter.name, adapter.overwrites);
+      (0, import_mp_adapter.initPlatform)(adapter.name, adapter.overwrites);
     }
-    if (!platform()) {
+    if (!(0, import_mp_adapter.platform)()) {
       throw new Error("Platform is not initialized; call initPlatform() or pass initMP({ adapter })");
     }
-    this.info = options.systemInfo || getSystemInfo();
+    this.info = options.systemInfo || (0, import_mp_adapter.getSystemInfo)();
     this.plugins = options.plugins || [];
     this.runtime = {
       getCurrentPages: () => {
@@ -337,7 +114,7 @@ var PageContext = class {
     return this;
   }
   get api() {
-    return platform();
+    return (0, import_mp_adapter.platform)();
   }
   createQuery(page = this.current) {
     return page ? this.runtime.createSelectorQuery(page) : void 0;
@@ -518,6 +295,7 @@ function readonly(obj) {
 }
 
 // src/store.js
+var import_mp_adapter2 = require("@chin0102/mp-adapter");
 var definitions = /* @__PURE__ */ new Map();
 var instances = /* @__PURE__ */ new Map();
 function cloneState(value) {
@@ -543,7 +321,7 @@ function createStore(name, instanceName, definition) {
   if (definition.persist) {
     const config = definition.persist === true ? {} : typeof definition.persist === "string" ? { key: definition.persist } : definition.persist;
     const key = typeof config.key === "function" ? config.key(instanceName, name) : config.key || instanceName;
-    persistence = createStorage(key, {
+    persistence = (0, import_mp_adapter2.createStorage)(key, {
       defaults: () => cloneState(state),
       debounce: config.debounce
     });

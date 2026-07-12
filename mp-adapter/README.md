@@ -1,6 +1,6 @@
 # mp-adapter
 
-同时面向 Node.js 和微信小程序的 JavaScript npm 包。Node.js 使用 ESM 源码入口；微信小程序和 CommonJS 使用预构建的单文件入口 `index.cjs`。
+同时面向 Node.js 和微信小程序的 JavaScript npm 包。Node.js 使用 ESM 源码入口；微信小程序和 CommonJS 使用预构建的单文件入口 `dist/index.js`。
 
 ## 开发
 
@@ -13,7 +13,7 @@ npm run check
 npm test
 ```
 
-公开 API 统一从 `src/index.js` 导出。发布前脚本会自动重新生成 `index.cjs`，不要直接修改构建产物。内部模块使用 ESM，并在相对导入中保留 `.js` 扩展名：
+公开 API 统一从 `src/index.js` 导出。发布前脚本会自动重新生成 `dist/index.js`，不要直接修改构建产物。内部模块使用 ESM，并在相对导入中保留 `.js` 扩展名：
 
 Node.js 同时支持两种加载方式：
 

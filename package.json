@@ -2,8 +2,9 @@
   "name": "mp-packages",
   "private": true,
   "scripts": {
-    "dev:publish":"sh scripts/dev-publish.sh",
-    "dev:push":"sh scripts/dev-push.sh"
+    "publish": "sh scripts/npm-publish.sh",
+    "dev:publish": "sh scripts/dev-publish.sh",
+    "dev:push": "sh scripts/dev-push.sh"
   },
   "workspaces": [
     "mp-adapter",

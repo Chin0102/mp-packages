@@ -3,24 +3,25 @@
   "version": "0.1.0",
   "description": "Core utilities for Node.js and WeChat Mini Program projects.",
   "type": "module",
-  "main": "./index.cjs",
+  "main": "./dist/index.js",
   "module": "./src/index.js",
+  "miniprogram": "dist",
   "exports": {
     ".": {
       "import": "./src/index.js",
-      "require": "./index.cjs",
-      "default": "./index.cjs"
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
     "src",
-    "index.cjs"
+    "dist"
   ],
   "sideEffects": false,
   "scripts": {
     "dev:push": "npm run build && yalc push",
-    "build": "esbuild src/index.js --bundle --format=cjs --platform=neutral --target=es2018 --outfile=index.cjs",
-    "check": "npm run build && node --check src/index.js && node --check index.cjs",
+    "build": "node scripts/build.js",
+    "check": "npm run build && node --check src/index.js && node --check dist/index.js",
     "test": "node --test",
     "prepack": "npm run build",
     "prepublishOnly": "npm run check"
