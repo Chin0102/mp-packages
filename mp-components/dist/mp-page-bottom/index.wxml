@@ -1,0 +1,2 @@
+<slot></slot>
+<view class="mp-page-bottom custom-class" style="{{spacerStyle}}{{customStyle}}"></view>

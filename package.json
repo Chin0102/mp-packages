@@ -8,6 +8,7 @@
   },
   "workspaces": [
     "mp-adapter",
-    "mp-core"
+    "mp-core",
+    "mp-components"
   ]
 }

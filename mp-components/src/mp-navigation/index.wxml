@@ -1,0 +1,12 @@
+<view
+  class="mp-navigation custom-class {{fixed ? 'mp-navigation--fixed' : ''}}"
+  style="{{navigationStyle}}z-index:{{zIndex}};{{customStyle}}"
+>
+  <view class="mp-navigation__background background-class">
+    <slot name="background"></slot>
+  </view>
+  <view class="mp-navigation__content content-class" style="{{contentStyle}}">
+    <slot></slot>
+  </view>
+</view>
+<view wx:if="{{fixed && placeholder}}" class="mp-navigation__placeholder" style="{{placeholderStyle}}"></view>

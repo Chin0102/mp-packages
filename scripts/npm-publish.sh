@@ -19,4 +19,10 @@ echo "Publishing @chin0102/mp-core to npm..."
   npm publish
 )
 
+echo "Publishing @chin0102/mp-components to npm..."
+(
+  cd "$ROOT_DIR/mp-components"
+  npm publish
+)
+
 echo "Packages published successfully."

@@ -1,0 +1,53 @@
+{
+  "name": "@chin0102/mp-components",
+  "version": "0.1.0",
+  "description": "Reusable native components for WeChat Mini Program projects.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./src/index.js",
+  "miniprogram": "dist",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./mp-navigation/index": "./dist/mp-navigation/index.js",
+    "./mp-navigation/opacity-with-scroll": {
+      "require": "./dist/mp-navigation/opacity-with-scroll.js",
+      "default": "./dist/mp-navigation/opacity-with-scroll.js"
+    },
+    "./mp-page-bottom/index": "./dist/mp-page-bottom/index.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "dev:push": "npm run build && yalc push",
+    "build": "node scripts/build.js",
+    "check": "npm run build && node --check src/index.js && node --check dist/index.js && node --check dist/mp-navigation/index.js && node --check dist/mp-navigation/opacity-with-scroll.js && node --check dist/mp-page-bottom/index.js",
+    "test": "node --test",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run check"
+  },
+  "keywords": [
+    "wechat",
+    "miniprogram",
+    "components"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@chin0102/mp-adapter": "^0.1.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "prettier": "3.9.5"
+  }
+}

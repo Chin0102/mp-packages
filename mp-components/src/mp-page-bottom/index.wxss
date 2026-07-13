@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+}
+
+.mp-page-bottom {
+  width: 100%;
+  box-sizing: border-box;
+}

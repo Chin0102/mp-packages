@@ -24,4 +24,11 @@ echo "Building and pushing @chin0102/mp-core..."
   yalc push
 )
 
+echo "Building and pushing @chin0102/mp-components..."
+(
+  cd "$ROOT_DIR/mp-components"
+  npm run build
+  yalc push
+)
+
 echo "Local packages pushed successfully. Rebuild npm in WeChat DevTools."

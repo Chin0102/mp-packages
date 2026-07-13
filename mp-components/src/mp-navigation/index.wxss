@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+}
+
+.mp-navigation {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-navigation--fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.mp-navigation__background {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.mp-navigation__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-navigation__placeholder {
+  width: 100%;
+  box-sizing: border-box;
+}
