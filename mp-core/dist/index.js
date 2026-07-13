@@ -33,7 +33,7 @@ __export(index_exports, {
   hasStore: () => hasStore,
   initMP: () => initMP,
   mp: () => mp,
-  readonly: () => readonly,
+  readonly: () => import_js_common2.readonly,
   unbindStores: () => unbindStores,
   useStore: () => useStore
 });
@@ -495,31 +495,12 @@ function definePage(factory) {
   });
 }
 
-// src/proxy.js
-var cache = /* @__PURE__ */ new WeakMap();
-function readonly(obj) {
-  if (!obj || typeof obj !== "object") return obj;
-  const cached = cache.get(obj);
-  if (cached) return cached;
-  const deny = () => {
-    throw new TypeError("Cannot modify readonly state");
-  };
-  const proxy = new Proxy(obj, {
-    get(target, key, receiver) {
-      return readonly(Reflect.get(target, key, receiver));
-    },
-    set: deny,
-    deleteProperty: deny,
-    defineProperty: deny,
-    setPrototypeOf: deny,
-    preventExtensions: deny
-  });
-  cache.set(obj, proxy);
-  return proxy;
-}
+// src/index.js
+var import_js_common2 = require("@chin0102/js-common");
 
 // src/store.js
 var import_mp_adapter4 = require("@chin0102/mp-adapter");
+var import_js_common = require("@chin0102/js-common");
 var definitions = /* @__PURE__ */ new Map();
 var instances = /* @__PURE__ */ new Map();
 function cloneState(value) {
@@ -561,7 +542,7 @@ function createStore(name, instanceName, definition) {
       return persistence;
     },
     get state() {
-      return readonly(state);
+      return (0, import_js_common.readonly)(state);
     },
     setState(patch) {
       assertAlive();

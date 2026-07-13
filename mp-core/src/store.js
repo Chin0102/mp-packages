@@ -1,6 +1,5 @@
+import { readonly } from '@chin0102/js-common';
 import { createStorage } from '@chin0102/mp-adapter';
-
-import { readonly } from './proxy.js';
 
 const definitions = new Map();
 const instances = new Map();

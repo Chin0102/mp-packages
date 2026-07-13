@@ -6,6 +6,5 @@ await build({
   format: 'cjs',
   platform: 'neutral',
   target: 'es2018',
-  external: ['@chin0102/js-common', '@chin0102/mp-adapter'],
   outfile: 'dist/index.js',
 });

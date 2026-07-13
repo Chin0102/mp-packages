@@ -1,11 +1,10 @@
 {
-  "name": "@chin0102/mp-core",
-  "version": "0.1.1",
-  "description": "Core utilities for Node.js and WeChat Mini Program projects.",
+  "name": "@chin0102/js-common",
+  "version": "0.1.0",
+  "description": "Shared JavaScript utilities for Chin0102 packages.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./src/index.js",
-  "miniprogram": "dist",
   "exports": {
     ".": {
       "import": "./src/index.js",
@@ -27,9 +26,8 @@
     "prepublishOnly": "npm run check"
   },
   "keywords": [
-    "wechat",
-    "miniprogram",
-    "framework",
+    "javascript",
+    "utilities",
     "esm"
   ],
   "license": "MIT",
@@ -38,10 +36,6 @@
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "@chin0102/js-common": "^0.1.0",
-    "@chin0102/mp-adapter": "^0.1.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

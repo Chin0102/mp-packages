@@ -7,6 +7,7 @@
     "dev:push": "sh scripts/dev-push.sh"
   },
   "workspaces": [
+    "js-common",
     "mp-adapter",
     "mp-core",
     "mp-components"
