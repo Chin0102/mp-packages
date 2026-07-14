@@ -1,0 +1,35 @@
+{
+  "appid": "exampe-appid",
+  "compileType": "miniprogram",
+  "libVersion": "3.16.2",
+  "miniprogramRoot": "miniprogram/",
+  "projectname": "mp-packages-example",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "minified": false,
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "./miniprogram/"
+      }
+    ],
+    "postcss": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "srcMiniprogramRoot": "miniprogram/",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

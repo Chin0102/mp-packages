@@ -40,8 +40,8 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@chin0102/js-common": "^0.1.0",
-    "@chin0102/mp-adapter": "^0.1.0"
+    "@chin0102/js-common": "^0.1.1",
+    "@chin0102/mp-adapter": "^0.1.1"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

@@ -1,6 +1,6 @@
 {
   "name": "@chin0102/mp-components",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reusable native components for WeChat Mini Program projects.",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,7 +17,11 @@
       "require": "./dist/mp-navigation/opacity-with-scroll.js",
       "default": "./dist/mp-navigation/opacity-with-scroll.js"
     },
-    "./mp-page-bottom/index": "./dist/mp-page-bottom/index.js"
+    "./mp-countdown/index": "./dist/mp-countdown/index.js",
+    "./mp-page-bottom/index": "./dist/mp-page-bottom/index.js",
+    "./mp-overlay/index": "./dist/mp-overlay/index.js",
+    "./mp-popup/index": "./dist/mp-popup/index.js",
+    "./mp-dialog/index": "./dist/mp-dialog/index.js"
   },
   "files": [
     "src",
@@ -26,7 +30,7 @@
   "scripts": {
     "dev:push": "npm run build && yalc push",
     "build": "node scripts/build.js",
-    "check": "npm run build && node --check src/index.js && node --check dist/index.js && node --check dist/mp-navigation/index.js && node --check dist/mp-navigation/opacity-with-scroll.js && node --check dist/mp-page-bottom/index.js",
+    "check": "npm run build && node --check src/index.js && node --check dist/index.js && node --check dist/mp-countdown/index.js && node --check dist/mp-navigation/index.js && node --check dist/mp-navigation/opacity-with-scroll.js && node --check dist/mp-page-bottom/index.js && node --check dist/mp-overlay/index.js && node --check dist/mp-popup/index.js && node --check dist/mp-dialog/index.js",
     "test": "node --test",
     "prepack": "npm run build",
     "prepublishOnly": "npm run check"

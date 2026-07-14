@@ -1,0 +1,5 @@
+<view class="mp-countdown custom-class" style="{{customStyle}}">
+  <slot name="prefix"></slot>
+  <text class="mp-countdown__text text-class">{{formatted}}</text>
+  <slot name="suffix"></slot>
+</view>

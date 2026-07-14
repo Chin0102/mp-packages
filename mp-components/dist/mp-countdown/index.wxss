@@ -1,0 +1,14 @@
+:host {
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.mp-countdown {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.mp-countdown__text {
+  font-variant-numeric: tabular-nums;
+}

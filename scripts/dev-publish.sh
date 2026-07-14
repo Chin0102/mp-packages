@@ -10,6 +10,13 @@ if ! command -v yalc >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "Building and publishing @chin0102/js-common..."
+(
+  cd "$ROOT_DIR/js-common"
+  npm run build
+  yalc publish
+)
+
 echo "Building and publishing @chin0102/mp-adapter..."
 (
   cd "$ROOT_DIR/mp-adapter"

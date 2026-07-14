@@ -1,0 +1,90 @@
+<mp-navigation fixed placeholder background-class="demo-navigation__background" content-class="demo-navigation__content">
+  <view slot="background" class="navigation-background"></view>
+  <text class="navigation-title">mp-components</text>
+</mp-navigation>
+
+<view class="page">
+  <view class="hero">
+    <text class="hero__eyebrow">LOCAL PACKAGE PLAYGROUND</text>
+    <text class="hero__title">原生组件验证</text>
+    <text class="hero__description">集中检查安全区、弹层交互和外部样式覆盖。</text>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Countdown</text>
+    <text class="section__description">按真实截止时间计算，页面计时器发生延迟时也不会累计漂移。</text>
+    <view class="countdown-row">
+      <mp-countdown
+        id="demo-countdown"
+        duration="{{15000}}"
+        format="mm:ss"
+        text-class="demo-countdown__text"
+        bindfinish="handleCountdownFinish"
+      >
+        <text slot="prefix" class="countdown-prefix">剩余</text>
+      </mp-countdown>
+      <text class="countdown-status">{{countdownStatus}}</text>
+    </view>
+    <button class="button button--secondary" bindtap="restartCountdown">重新开始</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Overlay</text>
+    <text class="section__description">全屏遮罩、滚动锁定及点击关闭事件。</text>
+    <button class="button" bindtap="openOverlay">打开遮罩</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Popup</text>
+    <text class="section__description">底部弹层通过 content-class 和 custom-style 调整业务外观。</text>
+    <button class="button" bindtap="openPopup">打开底部弹层</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Dialog</text>
+    <text class="section__description">标准确认/取消事件，显示状态由页面控制。</text>
+    <button class="button" bindtap="openDialog">打开对话框</button>
+  </view>
+
+  <view class="section status-card">
+    <text class="section__title">最近操作</text>
+    <text class="status-card__value">{{lastAction}}</text>
+  </view>
+
+  <mp-page-bottom min="24" append="24" custom-class="demo-page-bottom">
+    <text class="bottom-label">安全区占位上方内容</text>
+  </mp-page-bottom>
+</view>
+
+<mp-overlay
+  visible="{{overlayVisible}}"
+  opacity="{{0.72}}"
+  background-color="#0f172a"
+  close-on-tap
+  bindclose="closeOverlay"
+></mp-overlay>
+
+<mp-popup
+  visible="{{popupVisible}}"
+  position="bottom"
+  round
+  close-on-overlay
+  content-class="demo-popup"
+  bindclose="closePopup"
+>
+  <view class="popup-content">
+    <text class="popup-content__title">可定制的底部弹层</text>
+    <text class="popup-content__description">白色容器由组件提供，内容和动作由使用方控制。</text>
+    <button class="button" bindtap="closePopup">完成</button>
+    <mp-page-bottom min="20"></mp-page-bottom>
+  </view>
+</mp-popup>
+
+<mp-dialog
+  visible="{{dialogVisible}}"
+  title="确认操作"
+  content="这是一个不包含业务配色的通用对话框。"
+  close-on-overlay
+  title-class="demo-dialog-title"
+  bindclose="closeDialog"
+></mp-dialog>

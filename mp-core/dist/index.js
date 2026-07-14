@@ -33,7 +33,6 @@ __export(index_exports, {
   hasStore: () => hasStore,
   initMP: () => initMP,
   mp: () => mp,
-  readonly: () => import_js_common2.readonly,
   unbindStores: () => unbindStores,
   useStore: () => useStore
 });
@@ -260,6 +259,7 @@ function createAuth(options = {}) {
 }
 
 // src/page.js
+var import_js_common = require("@chin0102/js-common");
 var import_mp_adapter3 = require("@chin0102/mp-adapter");
 
 // src/store-bind.js
@@ -289,22 +289,6 @@ var pageRecords = /* @__PURE__ */ new Map();
 function normalizeRoute(route = "") {
   const path = route.split("?")[0];
   return path && path.charAt(0) !== "/" ? `/${path}` : path;
-}
-function deferred() {
-  let resolve;
-  const promise = new Promise((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
-function appendQuery(url, query = {}) {
-  const entries = Object.entries(query).flatMap(([key, value]) => {
-    if (value === void 0) return [];
-    const values = Array.isArray(value) ? value : [value];
-    return values.map((item) => `${encodeURIComponent(key)}=${encodeURIComponent(item != null ? item : "")}`);
-  });
-  if (!entries.length) return url;
-  return `${url}${url.includes("?") ? "&" : "?"}${entries.join("&")}`;
 }
 var PageContext = class {
   constructor() {
@@ -347,8 +331,8 @@ var PageContext = class {
     let record = pageRecords.get(page);
     if (!record) {
       record = {
-        initialized: deferred(),
-        ready: deferred(),
+        initialized: (0, import_js_common.deferred)(),
+        ready: (0, import_js_common.deferred)(),
         cleanups: []
       };
       pageRecords.set(page, record);
@@ -368,16 +352,16 @@ var PageContext = class {
     return pages.find((page) => normalizeRoute(page.route) === normalized);
   }
   navigate(url, query, options = {}) {
-    const target = appendQuery(url, query);
+    const target = (0, import_js_common.appendQuery)(url, query);
     const tab = this.tabMap.get(normalizeRoute(target));
     if (tab) return this.api.switchTab({ ...options, url: normalizeRoute(target) });
     return this.api.navigateTo({ ...options, url: target });
   }
   redirect(url, query, options = {}) {
-    return this.api.redirectTo({ ...options, url: appendQuery(url, query) });
+    return this.api.redirectTo({ ...options, url: (0, import_js_common.appendQuery)(url, query) });
   }
   reLaunch(url, query, options = {}) {
-    return this.api.reLaunch({ ...options, url: appendQuery(url, query) });
+    return this.api.reLaunch({ ...options, url: (0, import_js_common.appendQuery)(url, query) });
   }
   back(delta = 1, options = {}) {
     return this.api.navigateBack({ ...options, delta });
@@ -495,12 +479,9 @@ function definePage(factory) {
   });
 }
 
-// src/index.js
-var import_js_common2 = require("@chin0102/js-common");
-
 // src/store.js
+var import_js_common2 = require("@chin0102/js-common");
 var import_mp_adapter4 = require("@chin0102/mp-adapter");
-var import_js_common = require("@chin0102/js-common");
 var definitions = /* @__PURE__ */ new Map();
 var instances = /* @__PURE__ */ new Map();
 function cloneState(value) {
@@ -542,7 +523,7 @@ function createStore(name, instanceName, definition) {
       return persistence;
     },
     get state() {
-      return (0, import_js_common.readonly)(state);
+      return (0, import_js_common2.readonly)(state);
     },
     setState(patch) {
       assertAlive();

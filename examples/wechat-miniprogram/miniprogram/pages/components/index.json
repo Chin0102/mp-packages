@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "mp-countdown": "@chin0102/mp-components/mp-countdown/index",
+    "mp-dialog": "@chin0102/mp-components/mp-dialog/index",
+    "mp-navigation": "@chin0102/mp-components/mp-navigation/index",
+    "mp-overlay": "@chin0102/mp-components/mp-overlay/index",
+    "mp-page-bottom": "@chin0102/mp-components/mp-page-bottom/index",
+    "mp-popup": "@chin0102/mp-components/mp-popup/index"
+  }
+}

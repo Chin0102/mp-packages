@@ -1,0 +1,21 @@
+<view wx:if="{{visible}}" class="mp-popup custom-class" style="z-index:{{zIndex}};" catchtouchmove="noop">
+  <mp-overlay
+    wx:if="{{overlay}}"
+    visible
+    z-index="{{0}}"
+    opacity="{{overlayOpacity}}"
+    background-color="{{overlayColor}}"
+    close-on-tap="{{closeOnOverlay}}"
+    custom-style="{{overlayStyle}}"
+    custom-class="mp-popup__overlay overlay-class"
+    bindtap="handleOverlayTap"
+    bindclose="handleOverlayClose"
+  ></mp-overlay>
+  <view
+    class="mp-popup__content {{positionClass}} {{round ? 'mp-popup__content--round' : ''}} content-class"
+    style="{{animationStyle}}{{customStyle}}"
+    catchtap="noop"
+  >
+    <slot></slot>
+  </view>
+</view>

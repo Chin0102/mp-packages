@@ -1,7 +1,18 @@
 {
   "name": "mp-packages",
   "private": true,
+  "type": "module",
   "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "check": "npm run check --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "example:install": "npm install --prefix examples/wechat-miniprogram",
+    "example:check": "npm run example:install && npm run check --prefix examples/wechat-miniprogram",
+    "pack:check": "node scripts/check-packages.js",
+    "version-packages": "changeset version && node scripts/sync-versions.js && npm run build",
+    "verify": "npm test && npm run check && npm run pack:check && npm run example:check",
     "publish": "sh scripts/npm-publish.sh",
     "dev:publish": "sh scripts/dev-publish.sh",
     "dev:push": "sh scripts/dev-push.sh"
@@ -11,5 +22,8 @@
     "mp-adapter",
     "mp-core",
     "mp-components"
-  ]
+  ],
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0"
+  }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "mp-packages-wechat-example",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "check": "node scripts/check.js"
+  },
+  "dependencies": {
+    "@chin0102/js-common": "file:../../js-common",
+    "@chin0102/mp-adapter": "file:../../mp-adapter",
+    "@chin0102/mp-components": "file:../../mp-components",
+    "@chin0102/mp-core": "file:../../mp-core"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "desc": "mp-packages local example",
+  "rules": [
+    {
+      "action": "disallow",
+      "page": "*"
+    }
+  ]
+}

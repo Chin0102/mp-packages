@@ -1,0 +1,44 @@
+<mp-popup
+  visible="{{visible}}"
+  position="center"
+  round
+  z-index="{{zIndex}}"
+  overlay-opacity="{{overlayOpacity}}"
+  overlay-color="{{overlayColor}}"
+  close-on-overlay="{{closeOnOverlay}}"
+  custom-style="background:transparent;"
+  bindclose="handlePopupClose"
+  bindoverlaytap="handleOverlayTap"
+>
+  <view class="mp-dialog custom-class" style="width:{{width}};{{customStyle}}">
+    <view class="mp-dialog__header">
+      <slot name="header"></slot>
+      <text wx:if="{{title}}" class="mp-dialog__title title-class">{{title}}</text>
+    </view>
+
+    <view class="mp-dialog__content content-class">
+      <text wx:if="{{content}}" class="mp-dialog__message">{{content}}</text>
+      <slot></slot>
+    </view>
+
+    <view class="mp-dialog__footer footer-class">
+      <slot name="footer"></slot>
+      <view wx:if="{{showActions}}" class="mp-dialog__actions">
+        <button
+          wx:if="{{showCancel}}"
+          class="mp-dialog__button mp-dialog__button--cancel cancel-button-class"
+          disabled="{{cancelDisabled}}"
+          hover-class="mp-dialog__button--hover"
+          bindtap="handleCancel"
+        >{{cancelText}}</button>
+        <button
+          class="mp-dialog__button mp-dialog__button--confirm confirm-button-class"
+          disabled="{{confirmDisabled || confirmLoading}}"
+          loading="{{confirmLoading}}"
+          hover-class="mp-dialog__button--hover"
+          bindtap="handleConfirm"
+        >{{confirmText}}</button>
+      </view>
+    </view>
+  </view>
+</mp-popup>

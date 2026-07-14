@@ -1,3 +1,4 @@
+import { appendQuery, deferred } from '@chin0102/js-common';
 import { getEnv, getSystemInfo, initPlatform, platform } from '@chin0102/mp-adapter';
 
 import { bindStore, unbindStores } from './store-bind.js';
@@ -7,24 +8,6 @@ const pageRecords = new Map();
 function normalizeRoute(route = '') {
   const path = route.split('?')[0];
   return path && path.charAt(0) !== '/' ? `/${path}` : path;
-}
-
-function deferred() {
-  let resolve;
-  const promise = new Promise((done) => {
-    resolve = done;
-  });
-  return { promise, resolve };
-}
-
-function appendQuery(url, query = {}) {
-  const entries = Object.entries(query).flatMap(([key, value]) => {
-    if (value === undefined) return [];
-    const values = Array.isArray(value) ? value : [value];
-    return values.map((item) => `${encodeURIComponent(key)}=${encodeURIComponent(item ?? '')}`);
-  });
-  if (!entries.length) return url;
-  return `${url}${url.includes('?') ? '&' : '?'}${entries.join('&')}`;
 }
 
 class PageContext {

@@ -1,0 +1,131 @@
+:host {
+  display: block;
+}
+
+.mp-popup {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.mp-popup__overlay,
+.mp-popup__content {
+  pointer-events: auto;
+}
+
+.mp-popup__content {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.mp-popup__content--center {
+  top: 50%;
+  left: 50%;
+  animation-name: mp-popup-center-in;
+}
+
+.mp-popup__content--top {
+  top: 0;
+  left: 0;
+  width: 100%;
+  animation-name: mp-popup-top-in;
+}
+
+.mp-popup__content--right {
+  top: 0;
+  right: 0;
+  height: 100%;
+  animation-name: mp-popup-right-in;
+}
+
+.mp-popup__content--bottom {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  animation-name: mp-popup-bottom-in;
+}
+
+.mp-popup__content--left {
+  top: 0;
+  left: 0;
+  height: 100%;
+  animation-name: mp-popup-left-in;
+}
+
+.mp-popup__content--center.mp-popup__content--round {
+  border-radius: 24rpx;
+}
+
+.mp-popup__content--top.mp-popup__content--round {
+  border-radius: 0 0 24rpx 24rpx;
+}
+
+.mp-popup__content--right.mp-popup__content--round {
+  border-radius: 24rpx 0 0 24rpx;
+}
+
+.mp-popup__content--bottom.mp-popup__content--round {
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.mp-popup__content--left.mp-popup__content--round {
+  border-radius: 0 24rpx 24rpx 0;
+}
+
+@keyframes mp-popup-center-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes mp-popup-top-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mp-popup-right-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes mp-popup-bottom-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mp-popup-left-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

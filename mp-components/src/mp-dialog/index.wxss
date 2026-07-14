@@ -1,0 +1,75 @@
+:host {
+  display: block;
+}
+
+.mp-dialog {
+  box-sizing: border-box;
+  max-width: calc(100vw - 64rpx);
+  overflow: hidden;
+  color: #222222;
+  background: #ffffff;
+  border-radius: 24rpx;
+}
+
+.mp-dialog__header:empty,
+.mp-dialog__footer:empty {
+  display: none;
+}
+
+.mp-dialog__title {
+  display: block;
+  padding: 40rpx 40rpx 0;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.mp-dialog__content {
+  box-sizing: border-box;
+  padding: 32rpx 40rpx 40rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.mp-dialog__message {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.mp-dialog__actions {
+  display: flex;
+  border-top: 1rpx solid #eeeeee;
+}
+
+.mp-dialog__button {
+  flex: 1;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: 24rpx 20rpx;
+  color: #333333;
+  font-size: 30rpx;
+  line-height: 1.4;
+  background: #ffffff;
+  border: 0;
+  border-radius: 0;
+}
+
+.mp-dialog__button::after {
+  display: none;
+}
+
+.mp-dialog__button + .mp-dialog__button {
+  border-left: 1rpx solid #eeeeee;
+}
+
+.mp-dialog__button--confirm {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+.mp-dialog__button--hover {
+  background: #f5f5f5;
+}

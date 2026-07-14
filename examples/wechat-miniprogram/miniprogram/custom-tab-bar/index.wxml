@@ -1,0 +1,28 @@
+<view class="custom-tab-bar">
+  <view class="custom-tab-bar__content">
+    <view
+      wx:for="{{list}}"
+      wx:key="pagePath"
+      class="tab-item {{selected === index ? 'tab-item--selected' : ''}}"
+      data-index="{{index}}"
+      data-path="{{item.pagePath}}"
+      bindtap="switchTab"
+    >
+      <view class="tab-item__indicator"></view>
+      <view class="tab-item__icon tab-item__icon--{{item.icon}}">
+        <block wx:if="{{item.icon === 'components'}}">
+          <view class="components-dot"></view>
+          <view class="components-dot"></view>
+          <view class="components-dot"></view>
+          <view class="components-dot"></view>
+        </block>
+        <block wx:else>
+          <view class="runtime-line runtime-line--short"></view>
+          <view class="runtime-line"></view>
+        </block>
+      </view>
+      <text class="tab-item__text">{{item.text}}</text>
+    </view>
+  </view>
+  <view class="custom-tab-bar__safe-area"></view>
+</view>

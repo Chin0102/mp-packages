@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/components/index",
+    "pages/runtime/index"
+  ],
+  "window": {
+    "backgroundColor": "#f4f6f8",
+    "backgroundTextStyle": "light",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#64748b",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/components/index",
+        "text": "组件"
+      },
+      {
+        "pagePath": "pages/runtime/index",
+        "text": "运行时"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,43 @@
+<mp-navigation fixed placeholder background-class="runtime-navigation__background" content-class="runtime-navigation__content">
+  <view slot="background" class="navigation-background"></view>
+  <text class="navigation-title">运行时验证</text>
+</mp-navigation>
+
+<view class="page runtime-page">
+  <view class="runtime-summary">
+    <text class="runtime-summary__label">当前环境</text>
+    <text class="runtime-summary__value">{{environment}}</text>
+    <text class="runtime-summary__description">页面由 definePage 管理生命周期和清理函数。</text>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Store + 持久化</text>
+    <text class="metric">{{demo.count}}</text>
+    <text class="section__description">最近更新：{{demo.updatedAt}}</text>
+    <view class="button-row">
+      <button class="button" bindtap="increment">增加</button>
+      <button class="button button--secondary" bindtap="resetStore">重置</button>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Adapter Storage</text>
+    <text class="section__description">当前主题：{{preferences.theme}}</text>
+    <button class="button button--secondary" bindtap="toggleTheme">切换主题值</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">js-common Event</text>
+    <text class="section__description">{{eventMessage}}</text>
+    <button class="button button--secondary" bindtap="emitEvent">发送事件</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">Auth + API Client</text>
+    <text class="section__description">使用本地 mock transport 验证登录合并和 Authorization 注入，不发送外网请求。</text>
+    <button class="button" loading="{{apiLoading}}" disabled="{{apiLoading}}" bindtap="callApi">调用模拟接口</button>
+    <text class="api-result">{{apiResult}}</text>
+  </view>
+
+  <mp-page-bottom min="24" append="24"></mp-page-bottom>
+</view>

@@ -5,24 +5,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
+echo "Verifying workspace before publishing..."
+(
+  cd "$ROOT_DIR"
+  npm run verify
+)
+
 npm login
 
-echo "Publishing @chin0102/mp-adapter to npm..."
+echo "Publishing changed packages to npm..."
 (
-  cd "$ROOT_DIR/mp-adapter"
-  npm publish
+  cd "$ROOT_DIR"
+  npx changeset publish
 )
 
-echo "Publishing @chin0102/mp-core to npm..."
-(
-  cd "$ROOT_DIR/mp-core"
-  npm publish
-)
-
-echo "Publishing @chin0102/mp-components to npm..."
-(
-  cd "$ROOT_DIR/mp-components"
-  npm publish
-)
-
-echo "Packages published successfully."
+echo "Changed packages published successfully."

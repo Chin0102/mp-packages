@@ -1,0 +1,19 @@
+<view
+  wx:if="{{visible && lockScroll}}"
+  class="mp-overlay custom-class"
+  data-mp-overlay="root"
+  style="{{overlayStyle}}{{customStyle}}"
+  catchtap="handleTap"
+  catchtouchmove="noop"
+>
+  <slot></slot>
+</view>
+<view
+  wx:elif="{{visible}}"
+  class="mp-overlay custom-class"
+  data-mp-overlay="root"
+  style="{{overlayStyle}}{{customStyle}}"
+  catchtap="handleTap"
+>
+  <slot></slot>
+</view>

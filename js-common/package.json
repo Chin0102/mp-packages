@@ -1,6 +1,6 @@
 {
   "name": "@chin0102/js-common",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared JavaScript utilities for Chin0102 packages.",
   "type": "module",
   "main": "./dist/index.js",

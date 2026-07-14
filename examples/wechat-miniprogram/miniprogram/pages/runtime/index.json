@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "mp-navigation": "@chin0102/mp-components/mp-navigation/index",
+    "mp-page-bottom": "@chin0102/mp-components/mp-page-bottom/index"
+  }
+}

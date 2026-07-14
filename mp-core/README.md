@@ -1,6 +1,6 @@
 # mp-core
 
-同时面向 Node.js 和微信小程序的 JavaScript npm 包。平台能力由 `@chin0102/mp-adapter` 提供；Node.js 使用 ESM 源码入口，微信小程序和 CommonJS 使用预构建的单文件入口 `dist/index.js`。
+同时面向 Node.js 和微信小程序的 JavaScript npm 包。通用 JavaScript 能力由 `@chin0102/js-common` 提供，平台能力由 `@chin0102/mp-adapter` 提供；Node.js 使用 ESM 源码入口，微信小程序和 CommonJS 使用预构建的单文件入口 `dist/index.js`。
 
 ## 开发
 
