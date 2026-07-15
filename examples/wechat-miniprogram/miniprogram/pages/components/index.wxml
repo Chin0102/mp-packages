@@ -3,7 +3,7 @@
   <text class="navigation-title">mp-components</text>
 </mp-navigation>
 
-<view class="page">
+<view class="page tab-page">
   <view class="hero">
     <text class="hero__eyebrow">LOCAL PACKAGE PLAYGROUND</text>
     <text class="hero__title">原生组件验证</text>
@@ -16,16 +16,27 @@
     <view class="countdown-row">
       <mp-countdown
         id="demo-countdown"
-        duration="{{15000}}"
+        duration="{{countdownDuration}}"
+        target-time="{{countdownTargetTime}}"
+        paused="{{countdownPaused}}"
+        pause-on-hide
         format="mm:ss"
         text-class="demo-countdown__text"
+        bindtick="handleCountdownTick"
         bindfinish="handleCountdownFinish"
       >
         <text slot="prefix" class="countdown-prefix">剩余</text>
       </mp-countdown>
-      <text class="countdown-status">{{countdownStatus}}</text>
+      <view class="countdown-meta">
+        <text class="countdown-status">{{countdownStatus}}</text>
+        <text class="countdown-tick">{{countdownTick}}</text>
+      </view>
     </view>
-    <button class="button button--secondary" bindtap="restartCountdown">重新开始</button>
+    <view class="button-row">
+      <button class="button button--secondary" bindtap="toggleCountdown">{{countdownPaused ? '继续' : '暂停'}}</button>
+      <button class="button button--secondary" bindtap="restartCountdown">重新开始</button>
+      <button class="button button--ghost" bindtap="switchCountdownMode">切换为{{countdownMode === 'duration' ? '绝对时间' : '时长'}}</button>
+    </view>
   </view>
 
   <view class="section">
@@ -36,14 +47,23 @@
 
   <view class="section">
     <text class="section__title">Popup</text>
-    <text class="section__description">底部弹层通过 content-class 和 custom-style 调整业务外观。</text>
-    <button class="button" bindtap="openPopup">打开底部弹层</button>
+    <text class="section__description">验证 center、top、right、bottom 和 left 五种位置及遮罩关闭事件。</text>
+    <view class="position-grid">
+      <button class="button button--secondary" data-position="top" bindtap="openPopup">顶部</button>
+      <button class="button button--secondary" data-position="right" bindtap="openPopup">右侧</button>
+      <button class="button" data-position="center" bindtap="openPopup">居中</button>
+      <button class="button button--secondary" data-position="bottom" bindtap="openPopup">底部</button>
+      <button class="button button--secondary" data-position="left" bindtap="openPopup">左侧</button>
+    </view>
   </view>
 
   <view class="section">
     <text class="section__title">Dialog</text>
-    <text class="section__description">标准确认/取消事件，显示状态由页面控制。</text>
-    <button class="button" bindtap="openDialog">打开对话框</button>
+    <text class="section__description">对比标准动作区和使用 header/footer slot 的完全自定义内容。</text>
+    <view class="button-row">
+      <button class="button" data-mode="standard" bindtap="openDialog">标准对话框</button>
+      <button class="button button--secondary" data-mode="custom" bindtap="openDialog">自定义插槽</button>
+    </view>
   </view>
 
   <view class="section status-card">
@@ -66,15 +86,16 @@
 
 <mp-popup
   visible="{{popupVisible}}"
-  position="bottom"
+  position="{{popupPosition}}"
   round
   close-on-overlay
   content-class="demo-popup"
   bindclose="closePopup"
 >
-  <view class="popup-content">
-    <text class="popup-content__title">可定制的底部弹层</text>
-    <text class="popup-content__description">白色容器由组件提供，内容和动作由使用方控制。</text>
+  <view class="popup-content popup-content--{{popupPosition}}">
+    <text class="popup-content__eyebrow">{{popupPosition}}</text>
+    <text class="popup-content__title">五方向弹层</text>
+    <text class="popup-content__description">容器位置和动画由组件处理，业务页面只负责内容与状态。</text>
     <button class="button" bindtap="closePopup">完成</button>
     <mp-page-bottom min="20"></mp-page-bottom>
   </view>
@@ -82,9 +103,19 @@
 
 <mp-dialog
   visible="{{dialogVisible}}"
-  title="确认操作"
-  content="这是一个不包含业务配色的通用对话框。"
+  title="{{dialogCustom ? '' : '确认操作'}}"
+  content="{{dialogCustom ? '' : '这是一个不包含业务配色的通用对话框。'}}"
   close-on-overlay
+  show-actions="{{!dialogCustom}}"
   title-class="demo-dialog-title"
   bindclose="closeDialog"
-></mp-dialog>
+>
+  <view wx:if="{{dialogCustom}}" slot="header" class="custom-dialog-header">
+    <text class="custom-dialog-header__badge">SLOT</text>
+    <text class="custom-dialog-header__title">自定义标题区域</text>
+  </view>
+  <view wx:if="{{dialogCustom}}" class="custom-dialog-content">默认内容 slot 可以放入任意业务视图。</view>
+  <view wx:if="{{dialogCustom}}" slot="footer" class="custom-dialog-footer">
+    <button class="button" bindtap="closeDialog">知道了</button>
+  </view>
+</mp-dialog>

@@ -15,13 +15,14 @@ npm run example:install
 
 1. 使用微信开发者工具打开本目录。
 2. 执行“工具 → 构建 npm”。
-3. 编译并通过底部自定义 tab 查看“组件”和“运行时”两个页面。
+3. 编译并通过底部自定义 tab 查看“组件”和“运行时”两个页面，再从运行时页进入工具实验室。
 
 本项目使用 `touristappid`，无需配置真实 AppID 即可用于本地预览。`miniprogram_npm` 是开发者工具生成的目录，不提交到仓库。
 
 ## 覆盖范围
 
-- 组件页：`mp-navigation`、`mp-page-bottom`、`mp-countdown`、`mp-overlay`、`mp-popup`、`mp-dialog`。
-- 运行时页：`js-common` 事件、`mp-adapter` 平台与存储、`mp-core` 页面生命周期、Store、认证和 API Client。
-- 自定义 tabBar：使用小程序 `switchTab` 在组件页和运行时页之间切换，页面导航栏只展示标题。
+- 组件页：`mp-navigation`、`mp-page-bottom`、倒计时暂停/绝对时间模式、五方向 `mp-popup`、标准及自定义 `mp-dialog`。
+- 运行时页：平台与安全区信息、Storage 生命周期、Store 持久化、事件、并发登录合并、401 自动续期和 API Client。
+- 工具实验室：使用 `definePage` 清理 debounce、throttle 和 memoizeAsync，并演示 URL 工具及 `mp.navigate()`/`mp.back()`。
+- 自定义 tabBar：使用小程序 `switchTab` 在组件页和运行时页之间切换，两个 tab 页的导航栏只展示标题。
 - `npm run example:check`：检查页面文件、npm 包解析和模拟小程序环境下的核心调用。

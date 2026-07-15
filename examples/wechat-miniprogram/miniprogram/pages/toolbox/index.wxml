@@ -1,0 +1,64 @@
+<mp-navigation fixed placeholder background-class="toolbox-navigation__background" content-class="toolbox-navigation__content">
+  <view slot="background" class="navigation-background"></view>
+  <button class="navigation-back" bindtap="goBack">返回</button>
+  <text class="navigation-title">工具实验室</text>
+</mp-navigation>
+
+<view class="page toolbox-page">
+  <view class="toolbox-hero">
+    <text class="toolbox-hero__eyebrow">DEFINE PAGE + CLEANUP</text>
+    <text class="toolbox-hero__title">可观察的工具函数</text>
+    <text class="toolbox-hero__description">来源：{{source}}。离开页面时，definePage 注册的清理函数会取消全部调度器并清空缓存。</text>
+  </view>
+
+  <view class="section">
+    <text class="section__title">debounce</text>
+    <text class="section__description">连续输入只在停止 600ms 后保存，也可以立即 flush。</text>
+    <input
+      class="demo-input"
+      value="{{debounceInput}}"
+      placeholder="连续输入一些内容"
+      bindinput="handleDebounceInput"
+    />
+    <view class="result-row">
+      <text>{{debounceResult}}</text>
+      <button class="mini-button" bindtap="flushDebounce">立即执行</button>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section__title">throttle</text>
+    <text class="section__description">快速连续点击，观察原始点击次数和被节流后的执行次数。</text>
+    <view class="metric-pair">
+      <view><text class="metric-pair__value">{{throttleTaps}}</text><text class="metric-pair__label">点击</text></view>
+      <view><text class="metric-pair__value">{{throttleRuns}}</text><text class="metric-pair__label">执行</text></view>
+    </view>
+    <button class="button" bindtap="tapThrottle">快速点我</button>
+  </view>
+
+  <view class="section">
+    <text class="section__title">memoizeAsync</text>
+    <text class="section__description">合并同参数的并发调用，并缓存成功结果 5 秒。</text>
+    <view class="button-row">
+      <button class="button" loading="{{memoLoading}}" disabled="{{memoLoading}}" bindtap="runMemoized">并发调用</button>
+      <button class="button button--secondary" disabled="{{memoLoading}}" bindtap="refreshMemoized">强制刷新</button>
+    </view>
+    <text class="tool-result">{{memoResult}}</text>
+  </view>
+
+  <view class="section">
+    <text class="section__title">URL 工具</text>
+    <text class="section__description">appendQuery、parseQuery 和 stringifyQuery 对数组、中文及 hash 的处理。</text>
+    <text class="code-block">{{urlResult}}</text>
+    <text class="code-block">{{parsedQuery}}</text>
+    <button class="button button--secondary" bindtap="rebuildQuery">重新序列化</button>
+  </view>
+
+  <view class="section navigation-demo">
+    <text class="section__title">mp-core 导航识别</text>
+    <text class="section__description">当前是普通详情页。调用同一个 appContext.navigate() 返回组件页时，会根据 defineApp 的 tabs 配置自动使用 switchTab。</text>
+    <button class="button" bindtap="goComponents">前往组件 tab</button>
+  </view>
+
+  <mp-page-bottom min="24" append="24"></mp-page-bottom>
+</view>

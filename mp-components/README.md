@@ -2,7 +2,7 @@
 
 面向微信小程序的原生组件包。组件负责设备安全区和基础布局，颜色、背景、按钮及业务内容由使用方通过 slot、外部样式类和 `custom-style` 控制。
 
-组件依赖 `@chin0102/mp-adapter` 获取同步设备信息。使用组件前应通过 `initPlatform()` 或 `initMP()` 初始化平台。
+组件依赖 `@chin0102/mp-adapter` 获取同步设备信息。使用组件前应通过 `initPlatform()`，或在 `@chin0102/mp-core` 的 `defineApp({ adapter })` 中初始化平台。
 
 ## 开发
 
@@ -24,12 +24,12 @@ npm test
 ```json
 {
   "usingComponents": {
-    "mp-navigation": "@chin0102/mp-components/mp-navigation/index",
-    "mp-countdown": "@chin0102/mp-components/mp-countdown/index",
-    "mp-page-bottom": "@chin0102/mp-components/mp-page-bottom/index",
-    "mp-overlay": "@chin0102/mp-components/mp-overlay/index",
-    "mp-popup": "@chin0102/mp-components/mp-popup/index",
-    "mp-dialog": "@chin0102/mp-components/mp-dialog/index"
+    "mp-navigation": "@chin0102/appContext-components/appContext-navigation/index",
+    "mp-countdown": "@chin0102/appContext-components/appContext-countdown/index",
+    "mp-page-bottom": "@chin0102/appContext-components/appContext-page-bottom/index",
+    "mp-overlay": "@chin0102/appContext-components/appContext-overlay/index",
+    "mp-popup": "@chin0102/appContext-components/appContext-popup/index",
+    "mp-dialog": "@chin0102/appContext-components/appContext-dialog/index"
   }
 }
 ```

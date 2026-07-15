@@ -1,20 +1,22 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { getEnv, initMP, mp } from '../src/index.js';
+import { getEnv } from '@chin0102/mp-adapter';
 
-test('initMP requires an initialized platform', () => {
-  assert.throws(() => initMP({ systemInfo: {} }), /Platform is not initialized/);
+import { defineApp, definePage, appContext } from '../src/index.js';
+
+test('defineApp requires a platform configuration', () => {
+  assert.throws(() => defineApp({ systemInfo: {} }), /Platform is not initialized/);
 });
 
-test('initMP can initialize the adapter and expose its API', () => {
+test('defineApp initializes the adapter and exposes it through appContext', () => {
   globalThis.wx = {
     getAccountInfoSync: () => ({ miniProgram: { envVersion: 'trial' } }),
   };
 
-  initMP({ adapter: 'wx', systemInfo: { px2rpx: 2 } });
+  defineApp({ adapter: 'wx', systemInfo: { px2rpx: 2 } });
 
-  assert.equal(mp.api.getAccountInfoSync().miniProgram.envVersion, 'trial');
+  assert.equal(appContext.api.getAccountInfoSync().miniProgram.envVersion, 'trial');
   assert.equal(getEnv().trial, true);
 });
 
@@ -28,7 +30,7 @@ test('navigation chooses tab and non-tab APIs and builds query strings', () => {
     navigateBack: (options) => calls.push(['navigateBack', options]),
   };
 
-  initMP({
+  defineApp({
     adapter: {
       name: 'my',
       overwrites: {
@@ -39,11 +41,11 @@ test('navigation chooses tab and non-tab APIs and builds query strings', () => {
     tabs: [{ pagePath: 'pages/home/index' }],
   });
 
-  mp.navigate('/pages/home/index', { ignored: 'for-tabs' });
-  mp.navigate('/pages/detail/index?source=home', { id: 1, tag: ['a', 'b'], skip: undefined });
-  mp.redirect('/pages/login/index', { reason: 'expired' });
-  mp.reLaunch('/pages/home/index');
-  mp.back(2);
+  appContext.navigate('/pages/home/index', { ignored: 'for-tabs' });
+  appContext.navigate('/pages/detail/index?source=home', { id: 1, tag: ['a', 'b'], skip: undefined });
+  appContext.redirect('/pages/login/index', { reason: 'expired' });
+  appContext.reLaunch('/pages/home/index');
+  appContext.back(2);
 
   assert.deepEqual(calls, [
     ['switchTab', { url: '/pages/home/index' }],
@@ -71,7 +73,8 @@ test('runtime injection controls current pages and selector queries', async () =
     },
   };
 
-  initMP({
+  defineApp({
+    adapter: 'my',
     systemInfo: { px2rpx: 2 },
     runtime: {
       getCurrentPages: () => [targetPage],
@@ -82,8 +85,44 @@ test('runtime injection controls current pages and selector queries', async () =
     },
   });
 
-  assert.equal(mp.usePage('/pages/detail/index'), targetPage);
-  mp.record(targetPage).ready.resolve(targetPage);
-  assert.deepEqual(await mp.getRect('.card', { page: targetPage }), { left: 2, width: 20 });
+  assert.equal(appContext.usePage('/pages/detail/index'), targetPage);
+  await definePage({}).onReady.call(targetPage);
+  assert.deepEqual(await appContext.getRect('.card', { page: targetPage }), { left: 2, width: 20 });
   assert.deepEqual(calls, ['.card']);
+});
+
+test('page unload restores context even when user and cleanup hooks fail', () => {
+  const calls = [];
+  defineApp({
+    adapter: 'my',
+    systemInfo: {},
+    plugins: [
+      {
+        onUnload() {
+          calls.push('plugin');
+        },
+      },
+    ],
+  });
+  const definition = definePage({
+    onUnload() {
+      calls.push('user');
+      throw new Error('user unload failed');
+    },
+  });
+  const page = { route: 'pages/detail/index', setData() {} };
+  definition.onLoad.call(page);
+  definition.onShow.call(page);
+  definition.$onCleanup.call(page, () => {
+    calls.push('first cleanup');
+    throw new Error('cleanup failed');
+  });
+  definition.$onCleanup.call(page, () => calls.push('second cleanup'));
+
+  assert.throws(
+    () => definition.onUnload.call(page),
+    (error) => error.name === 'PageCleanupError' && error.errors.length === 2,
+  );
+  assert.deepEqual(calls, ['user', 'first cleanup', 'second cleanup', 'plugin']);
+  assert.equal(appContext.current, null);
 });

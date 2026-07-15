@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/components/index",
-    "pages/runtime/index"
+    "pages/runtime/index",
+    "pages/toolbox/index"
   ],
   "window": {
     "backgroundColor": "#f4f6f8",

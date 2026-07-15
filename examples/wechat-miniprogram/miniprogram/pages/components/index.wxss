@@ -78,8 +78,33 @@
 }
 
 .countdown-status {
+  display: block;
   color: #64748b;
   font-size: 24rpx;
+}
+
+.countdown-meta {
+  text-align: right;
+}
+
+.countdown-tick {
+  display: block;
+  margin-top: 6rpx;
+  color: #2563eb;
+  font-size: 22rpx;
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.position-grid .button {
+  min-width: 0;
+  width: 100%;
+  padding-right: 12rpx;
+  padding-left: 12rpx;
 }
 
 .bottom-label {
@@ -96,12 +121,34 @@
 
 .popup-content {
   box-sizing: border-box;
-  padding: 40rpx 32rpx 0;
+  width: 680rpx;
+  padding: 40rpx 32rpx;
 }
 
+.popup-content--left,
+.popup-content--right {
+  width: 560rpx;
+  height: 100vh;
+  padding-top: 160rpx;
+}
+
+.popup-content--center {
+  width: 600rpx;
+}
+
+.popup-content__eyebrow,
 .popup-content__title,
 .popup-content__description {
   display: block;
+}
+
+.popup-content__eyebrow {
+  margin-bottom: 10rpx;
+  color: #2563eb;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
 }
 
 .popup-content__title {
@@ -119,4 +166,38 @@
 
 .demo-dialog-title {
   color: #1d4ed8;
+}
+
+.custom-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.custom-dialog-header__badge {
+  padding: 6rpx 12rpx;
+  color: #ffffff;
+  font-size: 18rpx;
+  font-weight: 700;
+  background: #0f766e;
+  border-radius: 999rpx;
+}
+
+.custom-dialog-header__title {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.custom-dialog-content {
+  color: #64748b;
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+
+.custom-dialog-footer {
+  padding: 0 32rpx 32rpx;
+}
+
+.custom-dialog-footer .button {
+  width: 100%;
 }

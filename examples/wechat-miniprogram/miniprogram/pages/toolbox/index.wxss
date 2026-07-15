@@ -1,0 +1,156 @@
+.toolbox-navigation__content {
+  padding-right: 32rpx;
+}
+
+.toolbox-navigation__background {
+  box-shadow: 0 1rpx 0 rgba(148, 163, 184, 0.2);
+}
+
+.navigation-background {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.navigation-back {
+  margin-right: 20rpx;
+  padding: 8rpx 18rpx;
+  color: #1d4ed8;
+  font-size: 24rpx;
+  line-height: 1.5;
+  background: #dbeafe;
+  border-radius: 999rpx;
+}
+
+.navigation-back::after,
+.mini-button::after {
+  display: none;
+}
+
+.navigation-title {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.toolbox-hero {
+  margin-bottom: 28rpx;
+  padding: 40rpx 36rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #312e81, #2563eb 58%, #0f766e);
+  border-radius: 28rpx;
+}
+
+.toolbox-hero__eyebrow,
+.toolbox-hero__title,
+.toolbox-hero__description {
+  display: block;
+}
+
+.toolbox-hero__eyebrow {
+  margin-bottom: 12rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  opacity: 0.76;
+}
+
+.toolbox-hero__title {
+  margin-bottom: 16rpx;
+  font-size: 44rpx;
+  font-weight: 800;
+}
+
+.toolbox-hero__description {
+  font-size: 25rpx;
+  line-height: 1.7;
+  opacity: 0.86;
+}
+
+.demo-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  font-size: 27rpx;
+  background: #f8fafc;
+  border: 1rpx solid #cbd5e1;
+  border-radius: 16rpx;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64rpx;
+  margin-top: 18rpx;
+  color: #0f766e;
+  font-size: 24rpx;
+}
+
+.mini-button {
+  margin: 0;
+  padding: 8rpx 18rpx;
+  color: #1d4ed8;
+  font-size: 22rpx;
+  line-height: 1.5;
+  background: #dbeafe;
+  border-radius: 999rpx;
+}
+
+.metric-pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.metric-pair > view {
+  padding: 20rpx;
+  text-align: center;
+  background: #eff6ff;
+  border-radius: 16rpx;
+}
+
+.metric-pair__value,
+.metric-pair__label {
+  display: block;
+}
+
+.metric-pair__value {
+  color: #1d4ed8;
+  font-size: 44rpx;
+  font-weight: 800;
+}
+
+.metric-pair__label {
+  color: #64748b;
+  font-size: 22rpx;
+}
+
+.tool-result {
+  display: block;
+  margin-top: 22rpx;
+  color: #0f766e;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.code-block {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+  overflow-wrap: anywhere;
+  color: #cbd5e1;
+  font-family: monospace;
+  font-size: 21rpx;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: #0f172a;
+  border-radius: 14rpx;
+}
+
+.navigation-demo {
+  border-color: #bfdbfe;
+}

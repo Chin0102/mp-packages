@@ -22,32 +22,47 @@ import { defineStore } from '@chin0102/mp-core';
 const { defineStore } = require('@chin0102/mp-core');
 ```
 
-## 初始化
+## 应用初始化
 
-可以先显式初始化 adapter：
-
-```js
-import { initPlatform } from '@chin0102/mp-adapter';
-import { initMP } from '@chin0102/mp-core';
-
-initPlatform('wx');
-initMP({ tabs, plugins });
-```
-
-也可以在 `initMP` 中统一初始化：
+`defineApp()` 是唯一的运行时初始化入口。它与 `definePage()` 共享内部的运行时上下文：平台、系统信息、tab、插件和 runtime 在注册 App 时同步配置，异步业务初始化放入 `setup()`：
 
 ```js
-initMP({
-  adapter: {
-    name: 'my',
-    overwrites: platformOverwrites,
-  },
-  tabs,
-  plugins,
-});
+import { createApiClient, createAuth, defineApp } from '@chin0102/mp-core';
+
+App(
+  defineApp({
+    adapter: 'wx',
+    tabs,
+    plugins,
+
+    async setup(mp, launchOptions) {
+      const auth = createAuth({
+        authenticate: authenticateUser,
+      });
+      const api = createApiClient({ baseURL: API_URL, auth });
+
+      return { auth, api };
+    },
+
+    handleError(error, context) {
+      reportError(error, context.source);
+    },
+  }),
+);
 ```
 
-`mp.api` 始终指向当前 adapter。`getEnv` 和 `getSystemInfo` 继续从 `mp-core` 导出，但实现由 `mp-adapter` 提供。
+`setup()` 可以返回任意应用服务对象。启动完成后统一通过只读的 `mp` facade 访问：
+
+```js
+const services = await appContext.whenLaunched();
+appContext.services.api;
+```
+
+`mp.appStatus` 依次为 `idle`、`launching`、`ready` 或 `failed`；启动参数和失败原因分别通过 `mp.launchOptions`、`mp.launchError` 读取，`whenLaunched()` 会以同一个错误拒绝。`handleError` 统一接收启动失败、`onError` 和 `onUnhandledRejection`，第二个参数包含 `source`。
+
+插件可以实现应用级 `onAppLaunch`、`onAppShow`、`onAppHide` 和 `onError`，也可以继续实现页面级 `onLoad`、`onShow`、`onHide` 和 `onUnload`。应用启动顺序为：同步调用插件 `onAppLaunch` 和用户 `onLaunch`，等待它们完成后执行 `setup()`。
+
+`mp.api` 始终指向当前 adapter，`mp.info` 是初始化时获取的系统信息。需要主动读取最新环境或系统信息时，从 `@chin0102/mp-adapter` 导入 `getEnv()` 和 `getSystemInfo()`。
 
 ## 导航
 
@@ -157,12 +172,18 @@ const auth = createAuth({
 `getCurrentPages` 和页面选择器是小程序运行时能力，不属于平台 API 对象。其他平台存在差异时可以注入：
 
 ```js
-initMP({
-  runtime: {
-    getCurrentPages: () => globalThis.getCurrentPages?.() || [],
-    createSelectorQuery: (page) => platform().createSelectorQuery().in(page),
-  },
-});
+import { platform } from '@chin0102/mp-adapter';
+import { defineApp } from '@chin0102/mp-core';
+
+App(
+  defineApp({
+    adapter: 'my',
+    runtime: {
+      getCurrentPages: () => globalThis.getCurrentPages?.() || [],
+      createSelectorQuery: (page) => platform().createSelectorQuery().in(page),
+    },
+  }),
+);
 ```
 
 ## 在小程序中本地联调

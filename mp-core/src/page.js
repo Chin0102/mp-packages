@@ -1,161 +1,36 @@
-import { appendQuery, deferred } from '@chin0102/js-common';
-import { getEnv, getSystemInfo, initPlatform, platform } from '@chin0102/mp-adapter';
-
+import { context, appContext } from './context.js';
 import { bindStore, unbindStores } from './store-bind.js';
 
-const pageRecords = new Map();
-
-function normalizeRoute(route = '') {
-  const path = route.split('?')[0];
-  return path && path.charAt(0) !== '/' ? `/${path}` : path;
-}
-
-class PageContext {
-  constructor() {
-    this.current = null;
-    this.info = null;
-    this.tabs = [];
-    this.tabMap = new Map();
-    this.plugins = [];
-    this.runtime = {};
-  }
-
-  init(options = {}) {
-    if (options.adapter) {
-      const adapter = typeof options.adapter === 'string' ? { name: options.adapter } : options.adapter;
-      initPlatform(adapter.name, adapter.overwrites);
+function runSafely(operations) {
+  const errors = [];
+  operations.forEach((operation) => {
+    try {
+      operation?.();
+    } catch (error) {
+      errors.push(error);
     }
-    if (!platform()) {
-      throw new Error('Platform is not initialized; call initPlatform() or pass initMP({ adapter })');
-    }
-
-    this.info = options.systemInfo || getSystemInfo();
-    this.plugins = options.plugins || [];
-    this.runtime = {
-      getCurrentPages: () => globalThis.getCurrentPages?.() || [],
-      createSelectorQuery: (page) => page.createSelectorQuery(),
-      ...options.runtime,
-    };
-    this.tabs = (options.tabs || []).map((tab, index) => ({ ...tab, index }));
-    this.tabMap = new Map(this.tabs.map((tab) => [normalizeRoute(tab.pagePath), tab]));
-    return this;
+  });
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1) {
+    const error = new Error('Multiple page cleanup operations failed');
+    error.name = 'PageCleanupError';
+    error.errors = errors;
+    throw error;
   }
-
-  get api() {
-    return platform();
-  }
-
-  createQuery(page = this.current) {
-    return page ? this.runtime.createSelectorQuery(page) : undefined;
-  }
-
-  record(page) {
-    let record = pageRecords.get(page);
-    if (!record) {
-      record = {
-        initialized: deferred(),
-        ready: deferred(),
-        cleanups: [],
-      };
-      pageRecords.set(page, record);
-    }
-    return record;
-  }
-
-  setActive(page) {
-    this.current = page;
-    const tab = this.tabMap.get(normalizeRoute(page.route));
-    if (tab) page.getTabBar?.()?.setData({ selected: tab.index });
-  }
-
-  usePage(route) {
-    const normalized = normalizeRoute(route);
-    const pages = this.runtime.getCurrentPages?.() || [];
-    return pages.find((page) => normalizeRoute(page.route) === normalized);
-  }
-
-  navigate(url, query, options = {}) {
-    const target = appendQuery(url, query);
-    const tab = this.tabMap.get(normalizeRoute(target));
-    if (tab) return this.api.switchTab({ ...options, url: normalizeRoute(target) });
-    return this.api.navigateTo({ ...options, url: target });
-  }
-
-  redirect(url, query, options = {}) {
-    return this.api.redirectTo({ ...options, url: appendQuery(url, query) });
-  }
-
-  reLaunch(url, query, options = {}) {
-    return this.api.reLaunch({ ...options, url: appendQuery(url, query) });
-  }
-
-  back(delta = 1, options = {}) {
-    return this.api.navigateBack({ ...options, delta });
-  }
-
-  whenReady(page = this.current) {
-    return page ? this.record(page).ready.promise : Promise.resolve();
-  }
-
-  addCleanup(page, cleanup) {
-    if (typeof cleanup === 'function') this.record(page).cleanups.push(cleanup);
-    return cleanup;
-  }
-
-  async getRect(selector, options = {}) {
-    const page = options.page || this.current;
-    if (!page) return;
-    await this.whenReady(page);
-
-    return new Promise((resolve) => {
-      this.createQuery(page)
-        .select(selector)
-        .boundingClientRect((rect) => {
-          if (!rect || options.rpx === false) return resolve(rect);
-          const ratio = this.info?.px2rpx || 1;
-          const converted = { ...rect };
-          ['left', 'right', 'top', 'bottom', 'width', 'height'].forEach((key) => {
-            if (typeof converted[key] === 'number') converted[key] *= ratio;
-          });
-          resolve(converted);
-        })
-        .exec();
-    });
-  }
-
-  async getCanvas(selector, page = this.current) {
-    if (!page) return [undefined, undefined];
-    await this.whenReady(page);
-    return Promise.all([
-      new Promise((resolve) => {
-        this.createQuery(page)
-          .select(selector)
-          .node((res) => resolve(res?.node))
-          .exec();
-      }),
-      new Promise((resolve) => {
-        this.createQuery(page).select(selector).boundingClientRect(resolve).exec();
-      }),
-    ]);
-  }
-}
-
-export const mp = new PageContext();
-
-export function initMP(options) {
-  return mp.init(options);
 }
 
 export function definePage(factory) {
-  const pageOptions = typeof factory === 'function' ? factory(mp) : factory;
+  const pageOptions = typeof factory === 'function' ? factory(appContext) : factory;
+  if (!pageOptions || typeof pageOptions !== 'object') {
+    throw new TypeError('definePage requires an options object or factory');
+  }
   const { onLoad, onShow, onReady, onHide, onUnload, storeBindings = {} } = pageOptions;
   const wrappedOptions = Object.assign({}, pageOptions);
   delete wrappedOptions.storeBindings;
 
   return Object.assign(wrappedOptions, {
     onLoad(...args) {
-      const record = mp.record(this);
-      record.initialized.resolve(this);
+      const record = context.record(this);
 
       Object.entries(storeBindings).forEach(([dataKey, binding]) => {
         const config = typeof binding === 'function' ? { store: binding() } : binding;
@@ -163,59 +38,76 @@ export function definePage(factory) {
         bindStore(this, store, config.select, dataKey);
       });
 
-      mp.plugins.forEach((plugin) => {
-        mp.addCleanup(this, plugin.onLoad?.(this, mp, ...args));
+      context.plugins.forEach((plugin) => {
+        context.addCleanup(this, plugin.onLoad?.(this, appContext, ...args));
       });
       return onLoad?.apply(this, args);
     },
 
     onShow(...args) {
-      mp.setActive(this);
-      mp.plugins.forEach((plugin) => plugin.onShow?.(this, mp, ...args));
+      context.setActive(this);
+      context.plugins.forEach((plugin) => plugin.onShow?.(this, appContext, ...args));
       return onShow?.apply(this, args);
     },
 
     onReady(...args) {
-      const result = onReady?.apply(this, args);
-      return Promise.resolve(result).finally(() => mp.record(this).ready.resolve(this));
+      let result;
+      try {
+        result = onReady?.apply(this, args);
+      } catch (error) {
+        context.record(this).ready.resolve(this);
+        throw error;
+      }
+      return Promise.resolve(result).finally(() => context.record(this).ready.resolve(this));
     },
 
     onHide(...args) {
-      mp.plugins.forEach((plugin) => plugin.onHide?.(this, mp, ...args));
+      context.plugins.forEach((plugin) => plugin.onHide?.(this, appContext, ...args));
       return onHide?.apply(this, args);
     },
 
     onUnload(...args) {
-      const record = mp.record(this);
+      const record = context.record(this);
       let result;
+      let unloadError;
       try {
         result = onUnload?.apply(this, args);
-      } finally {
-        unbindStores(this);
-        record.cleanups.splice(0).forEach((cleanup) => cleanup());
-        mp.plugins.forEach((plugin) => plugin.onUnload?.(this, mp, ...args));
-        pageRecords.delete(this);
-        if (mp.current === this) mp.current = null;
+      } catch (error) {
+        unloadError = error;
       }
+
+      const operations = [
+        () => unbindStores(this),
+        ...record.cleanups.splice(0),
+        ...context.plugins.map((plugin) => () => plugin.onUnload?.(this, appContext, ...args)),
+        () => context.deleteRecord(this),
+        () => {
+          if (context.current === this) context.current = null;
+        },
+      ];
+      if (unloadError) {
+        operations.unshift(() => {
+          throw unloadError;
+        });
+      }
+      runSafely(operations);
       return result;
     },
 
     $onCleanup(cleanup) {
-      return mp.addCleanup(this, cleanup);
+      return context.addCleanup(this, cleanup);
     },
 
     $setTimeout(handler, delay) {
       const timer = setTimeout(handler, delay);
-      mp.addCleanup(this, () => clearTimeout(timer));
+      context.addCleanup(this, () => clearTimeout(timer));
       return timer;
     },
 
     $setInterval(handler, interval) {
       const timer = setInterval(handler, interval);
-      mp.addCleanup(this, () => clearInterval(timer));
+      context.addCleanup(this, () => clearInterval(timer));
       return timer;
     },
   });
 }
-
-export { getEnv, getSystemInfo };

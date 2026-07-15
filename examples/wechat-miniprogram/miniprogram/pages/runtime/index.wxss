@@ -27,7 +27,8 @@
 
 .runtime-summary__label,
 .runtime-summary__value,
-.runtime-summary__description {
+.runtime-summary__description,
+.runtime-summary__system {
   display: block;
 }
 
@@ -47,6 +48,15 @@
   font-size: 26rpx;
   line-height: 1.6;
   opacity: 0.86;
+}
+
+.runtime-summary__system {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.24);
+  opacity: 0.78;
 }
 
 .metric {
@@ -71,4 +81,43 @@
   white-space: pre-wrap;
   background: #0f172a;
   border-radius: 16rpx;
+}
+
+.storage-values {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding: 20rpx 24rpx;
+  color: #1e40af;
+  font-size: 26rpx;
+  background: #eff6ff;
+  border-radius: 16rpx;
+}
+
+.auth-result {
+  display: block;
+  margin-top: 24rpx;
+  color: #0f766e;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.toolbox-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #ffffff, #eff6ff);
+}
+
+.toolbox-entry__description {
+  display: block;
+  max-width: 540rpx;
+  color: #64748b;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.toolbox-entry__arrow {
+  color: #2563eb;
+  font-size: 48rpx;
 }

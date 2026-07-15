@@ -12,7 +12,11 @@ button {
 .page {
   box-sizing: border-box;
   min-height: 100vh;
-  padding: 28rpx 28rpx calc(168rpx + env(safe-area-inset-bottom));
+  padding: 28rpx;
+}
+
+.tab-page {
+  padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 }
 
 .section {
@@ -62,4 +66,9 @@ button {
 .button--secondary {
   color: #1e40af;
   background: #dbeafe;
+}
+
+.button--ghost {
+  color: #475569;
+  background: #f1f5f9;
 }

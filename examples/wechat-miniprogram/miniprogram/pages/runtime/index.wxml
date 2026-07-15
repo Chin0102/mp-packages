@@ -3,11 +3,12 @@
   <text class="navigation-title">运行时验证</text>
 </mp-navigation>
 
-<view class="page runtime-page">
+<view class="page tab-page runtime-page">
   <view class="runtime-summary">
     <text class="runtime-summary__label">当前环境</text>
     <text class="runtime-summary__value">{{environment}}</text>
     <text class="runtime-summary__description">页面由 definePage 管理生命周期和清理函数。</text>
+    <text class="runtime-summary__system">{{systemSummary}}</text>
   </view>
 
   <view class="section">
@@ -22,8 +23,18 @@
 
   <view class="section">
     <text class="section__title">Adapter Storage</text>
-    <text class="section__description">当前主题：{{preferences.theme}}</text>
-    <button class="button button--secondary" bindtap="toggleTheme">切换主题值</button>
+    <view class="storage-values">
+      <text>主题：{{preferences.theme}}</text>
+      <text>音量：{{preferences.volume}}</text>
+    </view>
+    <text class="section__description">订阅记录：{{storageHistory}}</text>
+    <view class="button-row">
+      <button class="button button--secondary" bindtap="toggleTheme">切换主题</button>
+      <button class="button button--secondary" bindtap="increaseVolume">音量 +10</button>
+      <button class="button button--ghost" bindtap="flushPreferences">立即写入</button>
+      <button class="button button--ghost" bindtap="reloadPreferences">重新读取</button>
+      <button class="button button--ghost" bindtap="removePreferences">删除存储</button>
+    </view>
   </view>
 
   <view class="section">
@@ -34,9 +45,22 @@
 
   <view class="section">
     <text class="section__title">Auth + API Client</text>
-    <text class="section__description">使用本地 mock transport 验证登录合并和 Authorization 注入，不发送外网请求。</text>
-    <button class="button" loading="{{apiLoading}}" disabled="{{apiLoading}}" bindtap="callApi">调用模拟接口</button>
+    <text class="section__description">本地 mock transport 可验证并发登录合并、Authorization 注入和 401 自动续期，全程不发送外网请求。</text>
+    <view class="button-row">
+      <button class="button" loading="{{apiLoading}}" disabled="{{apiLoading}}" bindtap="callApi">普通请求</button>
+      <button class="button button--secondary" disabled="{{apiLoading}}" bindtap="runConcurrentAuth">并发登录</button>
+      <button class="button button--secondary" disabled="{{apiLoading}}" bindtap="runAuthRenewal">401 续期</button>
+    </view>
+    <text class="auth-result">{{authResult}}</text>
     <text class="api-result">{{apiResult}}</text>
+  </view>
+
+  <view class="section toolbox-entry" bindtap="openToolbox">
+    <view>
+      <text class="section__title">js-common 工具实验室</text>
+      <text class="toolbox-entry__description">进入非 tab 详情页，体验请求合并、debounce、throttle 和 URL 工具。</text>
+    </view>
+    <text class="toolbox-entry__arrow">→</text>
   </view>
 
   <mp-page-bottom min="24" append="24"></mp-page-bottom>
